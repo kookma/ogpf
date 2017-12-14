@@ -109,8 +109,8 @@ Will produce
 
 ![Example 05](doc/exmp05.png)
 
-
 * **Example 06**
+
 ```fortran
   SUBROUTINE Exmp06
         !...............................................................................
@@ -138,8 +138,8 @@ Will produce
         CALL gplot%plot(x,y,'title "sin(x)" with lines lt 3', &
                         [pi],[0.d0],'title "zero" with points pt 7 ps 2 lc rgb "#FF0000"')
     END SUBROUTINE Exmp06
-
 ```
+
 Will produce
 
 ![Example 06](doc/exmp06.png)
