@@ -27,13 +27,13 @@ Object Based Interface to GnuPlot from Fortran (ogpf)
 * contour plot
 
 **script**
-  use a customised script to plot data from inside a fortran code
+* use a customised script to plot data from inside a fortran code
  
 **meshgrid**
-  generate mesh grid over a rectangular domain of [xmin xmax, ymin, max]
+* generate mesh grid over a rectangular domain of [xmin xmax, ymin, max]
  
 **linspace**
-  returns a linearly spaced vector with n points in [a, b]
+* returns a linearly spaced vector with n points in [a, b]
 
 ### Demo
 There is a collection of examples in demo.f90 to show the capabilities of ogpf.
