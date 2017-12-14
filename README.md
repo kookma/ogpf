@@ -12,8 +12,29 @@ Object Based Interface to GnuPlot from Fortran (ogpf)
 	Author:    Mohammad Rahmani
 			       Chem Eng Dep., Amirkabir Uni. of Tech
 
+### Procedures
+**plot**
+
+* plot a single vector v
+* plot a vector y against vector x
+* plot up to four pairs of x-y set at the same time
+* plot a matrix Y versus a vector x
+
+**surf**
+
+* surface plot
+* mesh plot
+* contour plot
+
+**script**
+ use a customised script to plot data from inside a fortran code
+**meshgrid**
+ generate mesh grid over a rectangular domain of [xmin xmax, ymin, max]
+**linspace**
+ returns a linearly spaced vector with n points in [a, b]
+
 ### Demo
-There is a collection of example in demo.f90 to show the capabilities of ogpf.
+There is a collection of examples in demo.f90 to show the capabilities of ogpf.
 
 ### Easy to use
 To use ogpf in your project, add these to files to your fortran project (code)
