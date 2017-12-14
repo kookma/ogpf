@@ -146,6 +146,7 @@ Will produce
 
 
 * **Example 08**
+
 ```fortran
     SUBROUTINE Exmp08
     !...............................................................................
@@ -187,7 +188,6 @@ Will produce
         CALL MatPlot%title('Example 8.2: Using legends when plotting a matrix against a vector')
         Call MatPlot%plot(t, y(:,1:2), lspec=["t 'vo=150'", "t 'vo=125'"])
     END SUBROUTINE Exmp08
-
 ```
 Will produce
 
@@ -195,6 +195,7 @@ Will produce
 
 
 * **Example 11**
+
 ```fortran
 !...............................................................................
 ! Example 11: A simple polar plot
@@ -226,7 +227,6 @@ Will produce
     CALL gp%plot(t,r)
 
     END SUBROUTINE Exmp11
-
 ```
 Will produce
 
@@ -234,6 +234,7 @@ Will produce
 
 
 * **Example 18**
+
 ```fortran
    SUBROUTINE Exmp18()
         !Use gnuplot script
@@ -244,13 +245,13 @@ Will produce
         CALL gp%script("load 'simple.plt'")
 
     END SUBROUTINE Exmp18
-
 ```
 Will produce
 
 ![Example 18](doc/exmp18.png)
 
 * **Example 21**
+
 ```fortran
    SUBROUTINE Exmp21()
          !Another simple 3d plot
