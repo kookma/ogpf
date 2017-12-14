@@ -264,9 +264,6 @@ Will produce
         m=size(X,1)
         n=size(X,2)
         ALLOCATE( Z(m,n) )
-        !Z=X*X*exp(-X*X) * Y*Y*exp(-Y*Y)
-        !Z=x*y**3-y*x**3
-        ! Z=-1/(X**2+Y**2+0.25)
         Z=sin(sqrt(x**2+y**2))/sqrt(x**2+y**2+0.025)
 
         CALL gp%title('Example 21: Simple 3D plot using splot')
@@ -275,8 +272,7 @@ Will produce
         CALL gp%zlabel('z-axis,...')
 
         !plot the 3D data
-        !CALL gp%surf(X,Y,Z,lspec= 'title "Sample 3D plot"')
-        CALL gp%surf(Z) !,lspec= 'title "Sample 3D plot"')
+        CALL gp%surf(Z)
 
     END SUBROUTINE Exmp21
 ```
