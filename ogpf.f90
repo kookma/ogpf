@@ -2,7 +2,7 @@
     !    GnuPlot Interface
     !-------------------------------------------------------------------------------
     !    Purpose:   Object Based Interface to GnuPlot from Fortran (ogpf)
-    !    Platform:  Windows XP/Vista/7
+    !    Platform:  Windows XP/Vista/7/10
     !               (It should work on other platforms, see the Write2GnuPlot subroutine below)
     !    Language:  Fortran 2003 and 2008
     !    Requires:  1. Fortran 2003 compiler (e.g gfortran 4.7, IVF 12.1, ...)
