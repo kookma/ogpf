@@ -44,6 +44,11 @@ To use ogpf in your project, add these to files to your fortran project (code)
 * select_precision.f90 (to choose the working precision)
 For details see 'demo.f90'
 
+##### Important Note
+To use ogpf on other operating system, you may need to modify the terminal type and fonts
+in the section of **Configuration Parameters**.
+A Makefile has been provided to build the demo from command line.
+
 ### Example codes
 This section shows few example codes from **demo.f90**
 * **Example 1**
