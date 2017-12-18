@@ -17,6 +17,12 @@
 ! This file demonstrate the capability of ogpf module
 ! An object based Fortran interface to gnuplot
 
+    ! Version:  0.17
+    ! Date:     Dec 18th, 2017
+    !   Minor corrections
+    ! [TODO] - example 18 does not working
+    ! - Multi window plots using script
+
 
 
     ! Version:  0.16
@@ -59,6 +65,12 @@ PROGRAM Demo
     USE ogpf
     IMPLICIT NONE
     INTEGER:: i=0
+
+
+    !call test_code
+    !stop
+
+
     PRINT *, 'gpf: gnuplot in Fortran Demonstration'
     PRINT*, "Example 1: Demo for xy plot"
     PRINT*, "Example 2: Line specification"
@@ -76,16 +88,16 @@ PROGRAM Demo
     PRINT*, "Example 14: A plot with logarithmic x and y axes"
     PRINT*, "Example 15: A fplot example"
     PRINT*, "Example 16: Script files"
-    PRINT*, "Example 17: Another sample script file"
-    PRINT*, "Example 19: Line types in gnuplot"
+    PRINT*, "Example 17: Multi window plots, using script"
     PRINT*, "Example 18: Running an external script file"
+    PRINT*, "Example 19: Line types in gnuplot"
     PRINT*, "Example 20: Simple 3D plot using splot"
-    PRINT*, "Example 21: Simple 3D plot using splot"
+    PRINT*, "Example 21: Another simple 3D plot using splot"
 
 
 
     Mainloop: DO
-    PRINT*,
+    PRINT*
     PRINT*, "select an example: 1 through 21"
     PRINT*, "enter 0 for exit"
      READ*, i
@@ -414,7 +426,10 @@ CONTAINS
 
 
     SUBROUTINE Exmp10()
-        !Use gnuplot options
+        !...............................................................................
+        ! Example 10: Use gnuplot options
+        !...............................................................................
+
         TYPE(gpf):: mp
         Real(wp):: x(10)
         Real(wp):: y(10)
@@ -462,6 +477,8 @@ CONTAINS
 
     !Call plot method
     CALL gp%plot(t,r)
+    call gp%options('set terminal wxt 1')
+    call gp%plot(t, 2*r)
 
     END SUBROUTINE Exmp11
 
@@ -553,7 +570,7 @@ CONTAINS
         !A demo to plot a function using fplot method
         TYPE(gpf):: gp
         Real(wp):: pi=4.d0*atan(1.d0)
-
+        CALL gp%FileName("Example15.plt")
         CALL gp%title("Example 15. A fplot example")
         CALL gp%xlabel("x...")
         CALL gp%ylabel("y...")
@@ -591,17 +608,28 @@ CONTAINS
 
 
     SUBROUTINE Exmp17()
-        !Demo for gnuplot script
+!...............................................................................
+! Example 17: Plot in two separate window using script
+!...............................................................................
+
+        ! Script is used to create multi window plot
+        ! Each "set term wxt <number>" creates a new window
         TYPE(gpf):: gp
-        CALL gp%title("Example 17. Another sample script file")
-        CALL gp%script('splot x**2+y**2')
+
+        CALL gp%script('&
+        &set term wxt 0 size 640,480;&
+        &set title "Example 17. Multi window plot";&
+        &plot x*x+2*x+1;&
+        &set term wxt 1;&
+        &set ylabel "xsin(x)";&
+        &plot x*sin(x)')
 
     END SUBROUTINE Exmp17
 
     SUBROUTINE Exmp18()
         !Use gnuplot script
-        !to send a special script file to gnuplot
-        !the file is an external file here is called "simple.dem"
+        !to send a special external script file to gnuplot
+        !the file is an external file here is called "simple.plt"
         TYPE(gpf):: gp
         CALL gp%title("Example 18. Running an external script file")
         CALL gp%script("load 'simple.plt'")
@@ -647,9 +675,6 @@ SUBROUTINE Exmp19
 
 
 
-
-
-
 ! 3D Plots
  SUBROUTINE Exmp20
         !A simple 3d plot
@@ -668,7 +693,7 @@ SUBROUTINE Exmp19
         Z=(X**2/a - Y**2/b)
 
         !#Annotation, label colors are also set!
-        CALL gp%FileName('Example20.plt')
+      !  CALL gp%FileName('Example20.plt')
         !Here options has been called several times instead of one time with a long string
         call gp%options("set style data lines")
         call gp%options("unset key;set contour base")
@@ -714,9 +739,9 @@ SUBROUTINE Exmp19
 
     Subroutine Exmp101()
 !Used in documentation, may be removed later.
-        TYPE(gpf):: gp
-        INTEGER, PARAMETER:: n=75, m=100
-        Real(wp), Parameter:: pi=4.d0*atan(1.0d0)
+        Type(gpf):: gp
+        Integer,  Parameter :: n=75, m=100
+        Real(wp), Parameter :: pi=4.d0*atan(1.0d0)
         Real(wp):: v(n)
         Real(wp):: w(n)
 
