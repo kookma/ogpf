@@ -1,3 +1,8 @@
+    !-------------------------------------------------------------------------------
+    !    GnuPlot Interface
+    !-------------------------------------------------------------------------------
+    !    Purpose:   Object Based Interface to GnuPlot from Fortran (ogpf)
+    !    Platform:  Windows XP/Vista/7
     !               (It should work on other platforms, see the Write2GnuPlot subroutine below)
     !    Language:  Fortran 2003 and 2008
     !    Requires:  1. Fortran 2003 compiler (e.g gfortran 4.7, IVF 12.1, ...)
@@ -9,13 +14,7 @@
     !               email: m[dot]rahmani[at]aut[dot]ac[dot]ir
 
     ! Revision History
-    
-    ! Version:  0.17
-    ! Date:     Dec 18th, 2017
-    !   Minor corrections
-    !   - Correct the meshgrid for wrong dy calculation when ygv is sent by two elements.
-    !   - Remove the subroutine ErrHandler (development postponed to future release)
-    
+ 
 
     ! Version:  0.16
     ! Date:     Feb 11th, 2016
