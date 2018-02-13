@@ -7,7 +7,6 @@ Feb 13, 2018
 ! Chemical Engineering Department
 ! Amirkabir University of Technology
 ! Tehran, Ir
-! m.rahmani[at]aut.ac.ir
 ! https:://github.com/kookma
 !
 ! Tuesday 2018-02-13
