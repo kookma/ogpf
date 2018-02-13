@@ -1,0 +1,57 @@
+# depslib dependency file v1.0
+1518375829 source:d:\gfortran\fortran\ogpf_n4\demo_02_intermediates.f90
+
+1518069750 source:d:\gfortran\fortran\ogpf_n4\demo_03_advanced.f90
+
+1518357754 source:d:\gfortran\fortran\ogpf_n4\md_errhandling.f90
+
+1518338293 source:d:\gfortran\fortran\ogpf_n4\md_parameters.f90
+
+1517580444 source:d:\gfortran\fortran\ogpf_n4\select_precision.f90
+
+1518199344 source:d:\gfortran\fortran\ogpf_n4\md_curve.f90
+
+1517581536 source:d:\gfortran\fortran\ogpf_n4\md_curves.f90
+
+1518369039 source:d:\gfortran\fortran\ogpf_n4\md_helperproc.f90
+
+1518378249 source:d:\gfortran\fortran\ogpf_n4\md_plot.f90
+
+1518097450 source:d:\gfortran\fortran\ogpf_n4\md_figure.f90
+
+1517583588 source:d:\gfortran\fortran\ogpf_n4\md_figures.f90
+
+1518374051 source:d:\gfortran\fortran\ogpf_n4\md_gpf.f90
+
+1518379570 source:d:\gfortran\fortran\ogpf_n4\demo_01_basics.f90
+
+1518376597 source:d:\gfortran\fortran\ogpf_n4\demo.f90
+
+1518375830 source:g:\fortran\ogpf_n4\demo_02_intermediates.f90
+
+1518069750 source:g:\fortran\ogpf_n4\demo_03_advanced.f90
+
+1518357756 source:g:\fortran\ogpf_n4\md_errhandling.f90
+
+1518338294 source:g:\fortran\ogpf_n4\md_parameters.f90
+
+1517580444 source:g:\fortran\ogpf_n4\select_precision.f90
+
+1518199344 source:g:\fortran\ogpf_n4\md_curve.f90
+
+1518369040 source:g:\fortran\ogpf_n4\md_helperproc.f90
+
+1517581536 source:g:\fortran\ogpf_n4\md_curves.f90
+
+1518378250 source:g:\fortran\ogpf_n4\md_plot.f90
+
+1518097450 source:g:\fortran\ogpf_n4\md_figure.f90
+
+1517583588 source:g:\fortran\ogpf_n4\md_figures.f90
+
+1518415806 source:g:\fortran\ogpf_n4\md_gpf.f90
+
+1518416422 source:g:\fortran\ogpf_n4\demo_01_basics.f90
+
+1518207742 source:g:\fortran\ogpf_n4\demo.f90
+

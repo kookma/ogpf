@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="ogpf_n4" />
+		<Option pch_mode="2" />
+		<Option compiler="gfortran" />
+		<Option virtualFolders="demo\;lib\;utility\;" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/ogpf_n4" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gfortran" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/ogpf_n4" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gfortran" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="demo.f90">
+			<Option weight="8" />
+			<Option virtualFolder="demo/" />
+		</Unit>
+		<Unit filename="demo_01_basics.f90">
+			<Option weight="7" />
+			<Option virtualFolder="demo/" />
+		</Unit>
+		<Unit filename="demo_02_intermediates.f90">
+			<Option weight="0" />
+			<Option virtualFolder="demo/" />
+		</Unit>
+		<Unit filename="demo_03_advanced.f90">
+			<Option weight="0" />
+			<Option virtualFolder="demo/" />
+		</Unit>
+		<Unit filename="linked_list.f90">
+			<Option compile="0" />
+			<Option link="0" />
+			<Option weight="0" />
+			<Option virtualFolder="utility/" />
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="md_curve.f90">
+			<Option weight="1" />
+			<Option virtualFolder="lib/" />
+		</Unit>
+		<Unit filename="md_curves.f90">
+			<Option weight="2" />
+			<Option virtualFolder="lib/" />
+		</Unit>
+		<Unit filename="md_errhandling.f90">
+			<Option weight="0" />
+			<Option virtualFolder="utility/" />
+		</Unit>
+		<Unit filename="md_figure.f90">
+			<Option weight="4" />
+			<Option virtualFolder="lib/" />
+		</Unit>
+		<Unit filename="md_figures.f90">
+			<Option weight="5" />
+			<Option virtualFolder="lib/" />
+		</Unit>
+		<Unit filename="md_gpf.f90">
+			<Option weight="6" />
+			<Option virtualFolder="lib/" />
+		</Unit>
+		<Unit filename="md_helperproc.f90">
+			<Option weight="1" />
+			<Option virtualFolder="utility/" />
+		</Unit>
+		<Unit filename="md_parameters.f90">
+			<Option weight="0" />
+			<Option virtualFolder="utility/" />
+		</Unit>
+		<Unit filename="md_plot.f90">
+			<Option weight="3" />
+			<Option virtualFolder="lib/" />
+		</Unit>
+		<Unit filename="select_precision.f90">
+			<Option weight="0" />
+			<Option virtualFolder="utility/" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

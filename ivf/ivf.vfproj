@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VisualStudioProject ProjectCreator="Intel Fortran" Keyword="Console Application" Version="11.0" ProjectIdGuid="{CC8E09A8-33C6-409A-80C3-E5FE25517CD6}">
+	<Platforms>
+		<Platform Name="Win32"/></Platforms>
+	<Configurations>
+		<Configuration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" WarnInterfaces="true" Traceback="true" BoundsCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
+	<Files>
+		<Filter Name="lib" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
+		<File RelativePath=".\md_curve.f90"/>
+		<File RelativePath=".\md_curves.f90"/>
+		<File RelativePath=".\md_figure.f90"/>
+		<File RelativePath=".\md_figures.f90"/>
+		<File RelativePath=".\md_gpf.f90"/>
+		<File RelativePath=".\md_parameters.f90"/>
+		<File RelativePath=".\md_plot.f90"/></Filter>
+		<Filter Name="demo" Filter="f90;for;f;fpp;ftn;def;odl;idl">
+		<File RelativePath=".\demo.f90"/>
+		<File RelativePath=".\demo_01_basics.f90"/>
+		<File RelativePath=".\demo_02_intermediates.f90"/>
+		<File RelativePath=".\demo_03_advanced.f90"/></Filter>
+		<Filter Name="utility">
+		<File RelativePath=".\linked_list.f90">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath=".\md_errhandling.f90"/>
+		<File RelativePath=".\md_helperproc.f90"/>
+		<File RelativePath=".\select_precision.f90"/></Filter></Files>
+	<Globals/></VisualStudioProject>

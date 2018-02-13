@@ -15,11 +15,15 @@
 !     $Id: select_precision.f90,v 1.3 2008/10/02 09:02:33 arjenmarkus Exp $
 !
 module select_precision
+
     implicit none
+
     private
+    public:: wp
+
     integer, parameter :: sp = kind( 1.0 )
     integer, parameter :: dp = kind( 1.0d0 )
 
     integer, parameter :: wp = dp
-    public:: wp
+
 end module select_precision

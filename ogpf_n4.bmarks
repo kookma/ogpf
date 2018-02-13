@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<BrowseTracker_layout_file>
+	<ActiveTarget name="Debug" />
+	<File name="md_curve.f90" open="0" top="0" tabpos="5">
+		<Cursor position="1242" topLine="17" />
+	</File>
+	<File name="demo_01_basics.f90" open="1" top="0" tabpos="2">
+		<Cursor position="6533" topLine="211" />
+		<BrowseMarks positions="16185" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="md_errhandling.f90" open="0" top="0" tabpos="0">
+		<Cursor position="1051" topLine="8" />
+	</File>
+	<File name="md_plot.f90" open="0" top="0" tabpos="6">
+		<Cursor position="19792" topLine="521" />
+		<BrowseMarks positions="675,1800,3617,6953,7281,7535,7662,12851,12984" />
+	</File>
+	<File name="md_figure.f90" open="0" top="0" tabpos="3">
+		<Cursor position="0" topLine="6" />
+		<BrowseMarks positions="7678" />
+	</File>
+	<File name="select_precision.f90" open="0" top="0" tabpos="0">
+		<Cursor position="575" topLine="0" />
+	</File>
+	<File name="demo_03_advanced.f90" open="0" top="0" tabpos="0">
+		<Cursor position="135" topLine="0" />
+	</File>
+	<File name="md_helperproc.f90" open="0" top="0" tabpos="4">
+		<Cursor position="3940" topLine="95" />
+	</File>
+	<File name="linked_list.f90" open="0" top="0" tabpos="0">
+		<Cursor position="1363" topLine="39" />
+	</File>
+	<File name="md_gpf.f90" open="1" top="1" tabpos="3">
+		<Cursor position="19341" topLine="578" />
+		<BrowseMarks positions="4424,5395,5395,5395,5671,6049,6342,10734,11178,11778,11778" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="md_parameters.f90" open="0" top="0" tabpos="2">
+		<Cursor position="573" topLine="0" />
+		<BrowseMarks positions="615" />
+	</File>
+	<File name="demo.f90" open="1" top="0" tabpos="1">
+		<Cursor position="183" topLine="0" />
+		<BrowseMarks positions="195,685,1456" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="demo_02_intermediates.f90" open="0" top="0" tabpos="5">
+		<Cursor position="1390" topLine="0" />
+	</File>
+</BrowseTracker_layout_file>
