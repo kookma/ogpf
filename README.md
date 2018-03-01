@@ -5,19 +5,28 @@ Object Based Interface to GnuPlot from Fortran (ogpf)
 
 	Purpose:   Object Based Interface to GnuPlot from Fortran (ogpf)
 	Platform:  Windows XP/Vista/7/10, Linux
-			   (It should work on other platforms, e.g Mac see the Write2GnuPlot subroutine in ogpf.f90)
+			   (It should work on other platforms, e.g Mac see the finalize_plot subroutine in ogpf.f90)
 	Language:  Fortran 2003 and 2008
 	Requires:  1. Fortran 2003 compiler (e.g gfortran 4.7, IVF 12.1, and later ...)
-			       2. gnuplot 4.5 and higher (other previous version can be used
-	Author:    Mohammad Rahmani
-			       Chem Eng Dep., Amirkabir Uni. of Tech
+	              There is only two more features needs Fortran 2008 standard
+                  execute_command_line and passing internal function as argument.
+			   2. gnuplot 5 and higher (other previous version can be used)
+    Author:    Mohammad Rahmani
+               Chem Eng Dep., Amirkabir Uni. of Tech
+               Tehran, Ir
+               url:    aut.ac.ir/m.rahmani
+               github: github.com/kookma
+               email:  m[dot]rahmani[at]aut[dot]ac[dot]ir
 
 ### Procedures
 **plot**
 
 * plot a single vector v
+>> plot(v)
 * plot a vector y against vector x
+>> plot(x,y)
 * plot up to four pairs of x-y set at the same time
+>> plot(x1, y1, ls1, x2, y2, ls2, x3, y3, ls3, x4, y4, ls4)
 * plot a matrix Y versus a vector x
 
 **surf**
@@ -29,11 +38,20 @@ Object Based Interface to GnuPlot from Fortran (ogpf)
 **script**
 * use a customised script to plot data from inside a fortran code
  
+ **Animations**
+ * ogpf can generate animation by 
+ 
+ 
+ 
+ 
 **meshgrid**
 * generate mesh grid over a rectangular domain of [xmin xmax, ymin, max]
  
 **linspace**
 * returns a linearly spaced vector with n points in [a, b]
+
+**arange**
+* generate a vector in form of [a, a+dx, a+2dx, a+3dx, ...]
 
 ### Demo
 There is a collection of examples in demo.f90 to show the capabilities of ogpf.
