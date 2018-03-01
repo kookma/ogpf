@@ -109,6 +109,8 @@ program demo
         print*, "Example 21: Stem plot"
         print*, "Example 22: Stem plot animation"
         print*, "Example 23: Another animation using matrix plot"
+        print*, "Example 24: Multiplot layout"
+        print*, "Example 25: Multiplot layout followed by simple plot"
         print*
         print*, "***   Surface and Contour Plots ***"
         print*
@@ -118,10 +120,11 @@ program demo
         print*, "Example 104:  Cylindrical mapping"
         print*, "Example 105:  More contour plot"
         print*, "Example 106:  Animation of 3D plots"
+        print*, "Example 106:  Multiplot layout in 3D"
 
         print*
-        write (unit=*, fmt='(a)') "2D plots: select an example: 1 through 23"
-        write (unit=*, fmt='(a)') "3D plots: select an example: 101 through 106"
+        write (unit=*, fmt='(a)') "2D plots: select an example: 1 through 25"
+        write (unit=*, fmt='(a)') "3D plots: select an example: 101 through 107"
         write (unit=*, fmt='(a)', advance='no') "enter 0 for exit:  "
         read*, i
 
@@ -172,7 +175,13 @@ program demo
                 call exmp22
             case(23)
                 call exmp23
-! 3D plots
+            case(24)
+                call exmp24
+            case(25)
+                call exmp25
+
+                ! 3D plots
+
             case(101)
                 call exmp101
             case(102)
@@ -185,6 +194,10 @@ program demo
                 call exmp105
             case(106)
                 call exmp106
+            case(107)
+                call exmp107
+
+
             case (0)
                 print*, "Program terminated successfully"
                 exit mainloop
@@ -472,7 +485,7 @@ contains
         call gp%axis([-pi, pi, -1.2_wp, 1.2_wp])
         call gp%options('set grid')
         ! add frames
-        do i=1, n
+        do i=1, n, 10
             y(i) = sin(x(i))
             z(i) = cos(x(i))
             ! each plot command adds one frame
@@ -645,8 +658,8 @@ contains
         call gp%title("Example 15. Plotting a function using fplot")
         call gp%xlabel("x...")
         call gp%ylabel("y...")
-       ! call fplot to plot a function in range of [a, b] with n points
-       call gp%fplot(myfun,[0d0,15.d0*pi],150)
+        ! call fplot to plot a function in range of [a, b] with n points
+        call gp%fplot(myfun,[0d0,15.d0*pi],150)
 
     end subroutine exmp15
 
@@ -860,7 +873,7 @@ contains
 
         ! start animation
         call gp%animation_start(delay=1) ! one second delay between frames
-        do i=1,n ! add frames
+        do i=1,n,10 ! add frames
             ! each plot command adds one frame
             call gp%plot(x(1:i), y(1:i), 'with impulses lw 2', &
                 x(1:i), y(1:i),  'with points pt 6')
@@ -899,6 +912,65 @@ contains
 
     end subroutine exmp23
 
+
+
+    subroutine exmp24()
+        !...............................................................................
+        ! Example 24: Use of multiplot layout
+        !...............................................................................
+
+        type(gpf):: gp
+        integer,  parameter :: n=25
+        real(wp), parameter :: pi=4.0_wp*atan(1.0_wp)
+        real(wp) :: x(n), y(n,2)
+        integer :: i
+        x=linspace(-pi, pi, n)
+        y(:,1) = sin(x)*exp(-x/2.0)
+        y(:,2) = cos(x)*(1-exp(-x/5.0))
+
+
+        call gp%multiplot(2,1)  ! create a 2x1 multiplot layout
+
+        call gp%title('Example 24. Multiplot layout, first row')
+        call gp%xlabel('x1, ...')
+        call gp%ylabel('y1, ...')
+        call gp%plot(x, y(:,1), 'pt 7 lw 2 lc "red"') ! plot in first row
+
+        call gp%title('Example 24. Multiplot layout,second row')
+        call gp%xlabel('x2, ...')
+        call gp%ylabel('y2, ...')
+
+        call gp%plot(x, y(:,2), 'pt 6 lw 2 lc "blue"') ! plot in the second
+
+    end subroutine exmp24
+
+
+
+    subroutine exmp25()
+        !...............................................................................
+        ! Example 24: Use multiplot followed by other plot command
+        !...............................................................................
+
+        type(gpf):: gp
+        integer,  parameter :: n=55
+        real(wp), parameter :: pi=4.0_wp*atan(1.0_wp)
+        real(wp) :: x(n), y(n,4)
+        integer :: i
+
+        x=linspace(-pi, pi, n)
+        y(:,1) = sin(x)
+        y(:,2) = sin(x)*cos(x)
+        y(:,3) = (1-x)*sin(x)
+        y(:,4) = (1-x)*cos(x)
+
+        call gp%multiplot(2,2)
+        do i=1, 4
+            call gp%plot(x, y(:,i))
+        end do
+        ! a new window will be started when all places in the multiplot
+        ! layout is occupied. The multiplot window will be closed
+        call gp%plot(x,y)
+    end subroutine exmp25
 
 
     !-------------------------------------------------------------------------------
@@ -1071,20 +1143,22 @@ contains
         real(wp), parameter :: pi=4.0_wp*atan(1.0_wp)
 
         ! create the xyz data
-        call meshgrid(x, y, linspace(-pi,pi, 60)  )
+        call meshgrid(x, y, linspace(-2.0_wp,2.0_wp, 65), linspace(-2.0_wp,3.0_wp, 65)  )
 
         m=size(x,1)
         n=size(x,2)
         allocate( z(m,n) )
 
-        z = sin(x) + cos(y)
+        z = x * exp(-x**2 - y**2)
 
         call gp%options('unset key')
-        call gp%axis([-pi,pi,-pi,pi])
+        call gp%options('unset surface')
+        call gp%axis([real(wp):: -2, 2, -2, 3])
 
         !plot the contour
         call gp%title('Example 105: Contour plot')
-        call gp%surf(x,y,z, palette='dark2')
+        call gp%options('unset border; unset tics')
+        call gp%surf(x,y,z, palette='accent')
         call gp%contour(x,y,z, palette='jet')
 
     end subroutine exmp105
@@ -1126,6 +1200,52 @@ contains
         call gp%animation_show()
 
     end subroutine exmp106
+
+  subroutine exmp107()
+        !...............................................................................
+        !Example 107: Multiplot layout in 3D and Contour plot
+        !...............................................................................
+        type(gpf):: gp
+
+        real(wp), allocatable:: x(:,:)
+        real(wp), allocatable:: y(:,:)
+        real(wp), allocatable:: z1(:,:)
+        real(wp), allocatable:: z2(:,:)
+        integer:: m
+        integer:: n
+        real(wp), parameter :: pi=4.0_wp*atan(1.0_wp)
+
+        ! create the xyz data
+        call meshgrid(x, y, linspace(-pi,pi, 60)  )
+
+        m=size(x,1)
+        n=size(x,2)
+        allocate( z1(m,n) )
+        allocate( z2(m,n) )
+
+        z1 = sin(x) + cos(y)
+        z2 = sin(x) * cos(y)
+
+        call gp%options('unset key')
+        call gp%axis([-pi,pi,-pi,pi])
+        call gp%options('unset colorbox')
+        call gp%options('set autoscale fix')
+        call gp%options('unset tics')
+
+        !plot the contour
+        call gp%title('Example 105: Contour plot')
+        call gp%multiplot(1,2)
+        call gp%surf(x,y,z1)
+        call gp%surf(x,y,z2)
+
+        call gp%multiplot(2,1)
+        call gp%options('set colorbox')
+        call gp%options('set tics')
+        call gp%contour(x,y,z1, palette='jet')
+        call gp%contour(x,y,z2, palette='set1')
+
+
+    end subroutine exmp107
 
 
 end program demo

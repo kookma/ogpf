@@ -139,10 +139,9 @@ module ogpf
     ! Correct to meet the requirements on other OS like Linux and Mac.
     character(len=*), parameter ::  gnuplot_term_type= 'wxt'                      ! Output terminal
     character(len=*), parameter ::  gnuplot_term_font= 'verdana,10'               ! font
-    character(len=*), parameter ::  gnuplot_term_size= '320,240'                  ! plot window size
+    character(len=*), parameter ::  gnuplot_term_size= '640,480'                  ! plot window size
     character(len=*), parameter ::  gnuplot_output_filename='ogpf_temp_script.gp' ! temporary file for output
 
-    integer                     ::  file_unit                                     ! file unit identifier
 
 
     type, public :: gpf
@@ -167,6 +166,7 @@ module ogpf
         logical :: haszrange      = .false.
         logical :: hasoptions     = .false.
         logical :: hasanimation   = .false.
+        logical :: hasfileopen    = .false.
 
         real(wp)           :: xrange(2), yrange(2), zrange(2)
 
@@ -176,8 +176,14 @@ module ogpf
         integer                         :: status=0 !Status from plot procedures
         character(len=25)               :: txtfilename=gnuplot_output_filename
         character(len=8)                :: plotscale
+        integer                         :: file_unit      ! file unit identifier
+        integer                         :: frame_number   ! frame number in animation
 
-        integer :: frame_number
+        ! multiplot parameters
+        logical :: hasmultiplot = .false.
+        integer :: multiplot_rows
+        integer :: multiplot_cols
+        integer :: multiplot_total_plots
 
     contains
 
@@ -203,6 +209,7 @@ module ogpf
         procedure, pass, public :: filename     => set_filename
         procedure, pass, public :: reset        => reset_to_defaults
 
+        procedure, pass, public :: multiplot  => sub_multiplot
         generic, public         :: plot       => plot2d_vector_vs_vector, plot2d_matrix_vs_vector
         generic, public         :: semilogx   => semilogxv, semilogxm
         generic, public         :: semilogy   => semilogyv, semilogym
@@ -373,6 +380,47 @@ contains
     !!> Section Two: Main Plotting Routines
     !!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+    !..............................................................................
+    subroutine sub_multiplot(this, rows, cols)
+        !..............................................................................
+
+        ! This subroutine sets flag and number of rows and columns in case
+        ! of multiplot layout
+
+        class(gpf):: this
+        integer, intent(in) :: rows
+        integer, intent(in) :: cols
+
+        ! ogpf does not support multiplot in animation mode
+        if (this%hasanimation) then
+            print*, md_name // ': ogpf does not support animation in multiplot mode'
+            stop
+        end if
+
+        ! set multiplot cols and rows
+        if (rows> 0 ) then
+            this%multiplot_rows = rows
+        else
+
+        end if
+        if (cols > 0 ) then
+            this%multiplot_cols = cols
+        else
+
+        end if
+
+        ! set the multiplot layout flag and plot numbers
+        this%hasmultiplot = .true.
+        this%multiplot_total_plots = 0
+
+        ! create the ouput file for writting gnuplot script
+        call create_outputfile(this)
+
+
+    end subroutine sub_multiplot
+
+
     subroutine plot2d_vector_vs_vector(this, x1, y1, ls1, &
             x2, y2, ls2, &
             x3, y3, ls3, &
@@ -482,54 +530,47 @@ contains
         end if
 
 
-        !> Rev 0.2 animation
-
-        if (.not. (this%hasanimation) ) then
-            ! create the ouput file for writting gnuplot script
-            call create_outputfile(this, file_unit)
-        else
-            this%frame_number = this%frame_number + 1
-        end if
+        call create_outputfile(this)
 
         ! set default line style for 2D plot, can be overwritten
         this%txtdatastyle = 'linespoints'
 
         ! Write plot title, axis labels and other annotations
-        call processcmd(this, file_unit)
+        call processcmd(this)
 
         ! Write plot command and line styles and legend if any
         if (number_of_plots ==1) then
-            write ( file_unit, '(a)' )  trim(pltstring(1))
+            write ( this%file_unit, '(a)' )  trim(pltstring(1))
         else
-            write ( file_unit, '(a)' )  ( trim(pltstring(i)) // ' \' , i=1, number_of_plots-1)
-            write ( file_unit, '(a)' )  trim(pltstring(number_of_plots))
+            write ( this%file_unit, '(a)' )  ( trim(pltstring(i)) // ' \' , i=1, number_of_plots-1)
+            write ( this%file_unit, '(a)' )  trim(pltstring(number_of_plots))
         end if
         ! Write xy data into file
         select case (plottype)
             case ('xi')
-                call write_xydata(file_unit,nx1,x1)
+                call write_xydata(this%file_unit,nx1,x1)
             case ('xy1')
-                call write_xydata(file_unit,nx1,x1,y1)
+                call write_xydata(this%file_unit,nx1,x1,y1)
             case ('xy2')
-                call write_xydata(file_unit,nx1,x1,y1)
-                call write_xydata(file_unit,nx2,x2,y2)
+                call write_xydata(this%file_unit,nx1,x1,y1)
+                call write_xydata(this%file_unit,nx2,x2,y2)
             case ('xy3')
-                call write_xydata(file_unit,nx1,x1,y1)
-                call write_xydata(file_unit,nx2,x2,y2)
-                call write_xydata(file_unit,nx3,x3,y3)
+                call write_xydata(this%file_unit,nx1,x1,y1)
+                call write_xydata(this%file_unit,nx2,x2,y2)
+                call write_xydata(this%file_unit,nx3,x3,y3)
             case ('xy4')
-                call write_xydata(file_unit,nx1,x1,y1)
-                call write_xydata(file_unit,nx2,x2,y2)
-                call write_xydata(file_unit,nx3,x3,y3)
-                call write_xydata(file_unit,nx4,x4,y4)
+                call write_xydata(this%file_unit,nx1,x1,y1)
+                call write_xydata(this%file_unit,nx2,x2,y2)
+                call write_xydata(this%file_unit,nx3,x3,y3)
+                call write_xydata(this%file_unit,nx4,x4,y4)
         end select
 
         !> Rev 0.2
         ! if there is no animation finalize
         if (.not. (this%hasanimation)) then
-            call finalize_plot(this, file_unit)
+            call finalize_plot(this)
         else
-            write(file_unit, '(a, I2)') 'pause ', this%pause_seconds
+            write(this%file_unit, '(a, I2)') 'pause ', this%pause_seconds
         end if
 
 
@@ -557,7 +598,7 @@ contains
         integer:: ny
         integer:: ns
         integer:: number_of_curves
-        integer::  i
+        integer:: i
         integer:: j
         integer:: ierr
         character(len=80), allocatable ::  pltstring(:), lst(:)
@@ -571,21 +612,21 @@ contains
             print*, 'gpf error: The length of arrays does not match'
             return
         end if
-
-        !> Rev 0.2 animation
-
-        if (.not. (this%hasanimation) ) then
-            ! create the ouput file for writting gnuplot script
-            call create_outputfile(this, file_unit)
-        else
-            this%frame_number = this%frame_number + 1
-        end if
+        !!!!!!!!
+        !!!!!!!!        !> Rev 0.2 animation
+        !!!!!!!!
+        !!!!!!!!        if (.not. (this%hasanimation) ) then
+        !!!!!!!!            ! create the ouput file for writting gnuplot script
+        call create_outputfile(this)
+        !!!!!!!!        else
+        !!!!!!!!            this%frame_number = this%frame_number + 1
+        !!!!!!!!        end if
 
         ! set default line style for 2D plot, can be overwritten
         this%txtdatastyle = 'linespoints'
 
         ! Write titles and other annotations
-        call processcmd(this, file_unit)
+        call processcmd(this)
 
         ! Write plot command and line styles and legend if any
         number_of_curves=size(ymat,dim=2)
@@ -634,15 +675,15 @@ contains
         end if
 
         ! Write plot command and line styles and legend if any
-        write ( file_unit, '(a)' ) ( trim(pltstring(i)) // ' \' , i=1, number_of_curves-1)
-        write ( file_unit, '(a)' )   trim(pltstring(number_of_curves))
+        write ( this%file_unit, '(a)' ) ( trim(pltstring(i)) // ' \' , i=1, number_of_curves-1)
+        write ( this%file_unit, '(a)' )   trim(pltstring(number_of_curves))
 
         ! Write data into script file
         do j=1, number_of_curves
             do i = 1, nx
-                write ( file_unit, * ) xv(i),ymat(i,j)
+                write ( this%file_unit, * ) xv(i),ymat(i,j)
             end do
-            write ( file_unit, '(a)' ) 'e'  !end of jth set of data
+            write ( this%file_unit, '(a)' ) 'e'  !end of jth set of data
         end do
 
 
@@ -651,9 +692,9 @@ contains
         !> Rev 0.2
         ! if there is no animation finalize
         if (.not. (this%hasanimation)) then
-            call finalize_plot(this, file_unit)
+            call finalize_plot(this)
         else
-            write(file_unit, '(a, I2)') 'pause ', this%pause_seconds
+            write(this%file_unit, '(a, I2)') 'pause ', this%pause_seconds
         end if
 
         !Release memory
@@ -699,50 +740,50 @@ contains
         else
             xyz_data=.false.
         end if
-
-        !> Rev 0.2 animation
-
-        if (.not. (this%hasanimation) ) then
-            ! create the ouput file for writting gnuplot script
-            call create_outputfile(this, file_unit)
-        else
-            this%frame_number = this%frame_number + 1
-        end if
+        !!!!!!!!
+        !!!!!!!!        !> Rev 0.2 animation
+        !!!!!!!!
+        !!!!!!!!        if (.not. (this%hasanimation) ) then
+        !!!!!!!!            ! create the ouput file for writting gnuplot script
+        call create_outputfile(this)
+        !!!!!!!!        else
+        !!!!!!!!            this%frame_number = this%frame_number + 1
+        !!!!!!!!        end if
 
         ! set default line style for 3D plot, can be overwritten
         this%txtdatastyle = 'lines'
 
         ! Write titles and other annotations
-        call processcmd(this, file_unit)
+        call processcmd(this)
 
         ! Write xy data into file
-        write ( file_unit, '(a)' ) '#data x y z'
+        write ( this%file_unit, '(a)' ) '#data x y z'
         ! Rev 0.20
         ! write the $xyz datablocks
-        write( file_unit, '(a)' )  datablock // ' << EOD'
+        write( this%file_unit, '(a)' )  datablock // ' << EOD'
         if (xyz_data) then
             do j=1,ncx
                 do i=1, nrx
-                    write ( file_unit, * ) x(i,j), y(i,j), z(i,j)
+                    write ( this%file_unit, * ) x(i,j), y(i,j), z(i,j)
                 enddo
-                write( file_unit, '(a)' )  !put an empty line
+                write( this%file_unit, '(a)' )  !put an empty line
             enddo
-            write ( file_unit, '(a)' ) 'EOD'  !end of datablock
+            write ( this%file_unit, '(a)' ) 'EOD'  !end of datablock
         else !only Z has been sent (i.e. single matrix data)
             do j=1,ncx
                 do i=1, nrx
-                    write ( file_unit, * ) i, j, x(i,j)
+                    write ( this%file_unit, * ) i, j, x(i,j)
                 enddo
-                write( file_unit, '(a)' )  !put an empty line
+                write( this%file_unit, '(a)' )  !put an empty line
             enddo
-            write ( file_unit, '(a)' ) 'EOD'  !end of datablock
+            write ( this%file_unit, '(a)' ) 'EOD'  !end of datablock
         end if
 
 
         !write the color palette into gnuplot script file
         if (present(palette)) then
-            write ( file_unit, '(a)' )  color_palettes(palette)
-            write ( file_unit, '(a)' )  'set pm3d' ! a conflict with lspec
+            write ( this%file_unit, '(a)' )  color_palettes(palette)
+            write ( this%file_unit, '(a)' )  'set pm3d' ! a conflict with lspec
         end if
 
 
@@ -756,15 +797,15 @@ contains
             pltstring='splot ' // datablock // ' notitle '
         end if
 
-        write ( file_unit, '(a)' ) trim(pltstring)
+        write ( this%file_unit, '(a)' ) trim(pltstring)
 
 
         !> Rev 0.2: animation
         ! if there is no animation finalize
         if (.not. (this%hasanimation)) then
-            call finalize_plot(this, file_unit)
+            call finalize_plot(this)
         else
-            write(file_unit, '(a, I2)') 'pause ', this%pause_seconds
+            write(this%file_unit, '(a, I2)') 'pause ', this%pause_seconds
         end if
 
         !: End of splot
@@ -809,62 +850,61 @@ contains
             xyz_data=.false.
         end if
 
-        !> Rev 0.2 animation
-
-        if (.not. (this%hasanimation) ) then
-            ! create the ouput file for writting gnuplot script
-            call create_outputfile(this, file_unit)
-        else
-            this%frame_number = this%frame_number + 1
-        end if
+        !!!!!!        !> Rev 0.2 animation
+        !!!!!!
+        !!!!!!        if (.not. (this%hasanimation) ) then
+        !!!!!!            ! create the ouput file for writting gnuplot script
+        call create_outputfile(this)
+        !!!!!!        else
+        !!!!!!            this%frame_number = this%frame_number + 1
+        !!!!!!        end if
 
         ! set default line style for 3D plot, can be overwritten
         this%txtdatastyle = 'lines'
 
         ! Write titles and other annotations
-        call processcmd(this, file_unit)
-
+        call processcmd(this)
 
         ! Write xy data into file
-        write ( file_unit, '(a)' ) '#data x y z'
+        write ( this%file_unit, '(a)' ) '#data x y z'
         ! write the $xyz datablocks
-        write( file_unit, '(a)' )  datablock // ' << EOD'
+        write( this%file_unit, '(a)' )  datablock // ' << EOD'
         if (xyz_data) then
             do j=1,ncx
                 do i=1, nrx
-                    write ( file_unit, fmt=* ) x(i,j), y(i,j), z(i,j)
+                    write ( this%file_unit, fmt=* ) x(i,j), y(i,j), z(i,j)
                 enddo
-                write( file_unit, '(a)' )  !put an empty line
+                write( this%file_unit, '(a)' )  !put an empty line
             enddo
-            write ( file_unit, '(a)' ) 'EOD'  !end of datablock
+            write ( this%file_unit, '(a)' ) 'EOD'  !end of datablock
         else !only Z has been sent (i.e. single matrix data)
             do j=1,ncx
                 do i=1, nrx
-                    write ( file_unit, fmt=* ) i, j, x(i,j)
+                    write ( this%file_unit, fmt=* ) i, j, x(i,j)
                 enddo
-                write( file_unit, '(a)' )  !put an empty line
+                write( this%file_unit, '(a)' )  !put an empty line
             enddo
-            write ( file_unit, '(a)' ) 'EOD'  !end of datablock
+            write ( this%file_unit, '(a)' ) 'EOD'  !end of datablock
         end if
 
 
         ! create the contour lines
-        write ( file_unit, '(a)' ) ! empty line
-        write ( file_unit, '(a)' ) '# create the contour'
-        write ( file_unit, '(a)' ) 'set contour base'
-        write ( file_unit, '(a)' ) 'set cntrparam levels 14'
-        write ( file_unit, '(a)' ) 'unset surface'
-        write ( file_unit, '(a)' ) 'set view map'
+        write ( this%file_unit, '(a)' ) ! empty line
+        write ( this%file_unit, '(a)' ) '# create the contour'
+        write ( this%file_unit, '(a)' ) 'set contour base'
+        write ( this%file_unit, '(a)' ) 'set cntrparam levels 14'
+        write ( this%file_unit, '(a)' ) 'unset surface'
+        write ( this%file_unit, '(a)' ) 'set view map'
 
 
         !write the color palette into gnuplot script file
         if (present(palette)) then
-            write ( file_unit, '(a)' )  color_palettes(palette)
-            write ( file_unit, '(a)' )  'set pm3d' ! a conflict with lspec
+            write ( this%file_unit, '(a)' )  color_palettes(palette)
+            write ( this%file_unit, '(a)' )  'set pm3d' ! a conflict with lspec
         end if
 
 
-        write ( file_unit, '(a)' ) ! empty line
+        write ( this%file_unit, '(a)' ) ! empty line
 
         if ( present(lspec) ) then
             if (hastitle(lspec)) then
@@ -876,14 +916,14 @@ contains
             pltstring='splot ' // datablock // ' notitle '
         end if
 
-        write ( file_unit, '(a)' ) trim(pltstring)
+        write ( this%file_unit, '(a)' ) trim(pltstring)
 
         !> Rev 0.20
         ! if there is no animation finalize
         if (.not. (this%hasanimation)) then
-            call finalize_plot(this, file_unit)
+            call finalize_plot(this)
         else
-            write(file_unit, '(a, I2)') 'pause ', this%pause_seconds
+            write(this%file_unit, '(a, I2)') 'pause ', this%pause_seconds
         end if
 
         !: End of cplot
@@ -1123,6 +1163,14 @@ contains
         class(gpf) :: this
         integer, intent(in), optional :: delay
 
+
+        ! ogpf does not support multiplot with animation at the same time
+        if (this%hasmultiplot) then
+            print*, md_name // ': does not support animation in multiplot mode!'
+            stop
+        end if
+
+
         if (present(delay)) then
             this%pause_seconds = delay
         else
@@ -1132,7 +1180,8 @@ contains
         this%frame_number = 0
 
         ! create the ouput file for writting gnuplot script
-        call create_outputfile(this, file_unit)
+        call create_outputfile(this)
+        this%hasfileopen  = .true.
         this%hasanimation = .true.
 
     end subroutine sub_animation_start
@@ -1148,7 +1197,7 @@ contains
         this%frame_number = 0
         this%hasanimation = .false.
 
-        call finalize_plot(this, file_unit)
+        call finalize_plot(this)
 
     end subroutine sub_animation_show
 
@@ -1191,16 +1240,16 @@ contains
         class(gpf):: this
 
         !REV 0.18: a dedicated subroutine is used to create the output file
-        call create_outputfile(this, file_unit)
+        call create_outputfile(this)
 
         ! set default line style, can be overwritten
         this%txtdatastyle = 'linespoints'
         !write the script
-        call processcmd(this, file_unit)
-        write(unit=file_unit, fmt='(a)') this%txtscript
+        call processcmd(this)
+        write(unit=this%file_unit, fmt='(a)') this%txtscript
 
         ! close the file and call gnuplot
-        call finalize_plot(this, file_unit)
+        call finalize_plot(this)
 
     end subroutine runscript
 
@@ -1249,78 +1298,78 @@ contains
 
 
 
-    subroutine processcmd(this, file_unit)
+    subroutine processcmd(this)
         !..............................................................................
         !   This subroutine writes all the data into plot file
         !   to be read by gnuplot
         !..............................................................................
 
         class(gpf)              :: this
-        integer, intent(in)     :: file_unit
+
 
         ! The following lines set the gnuplot terminal
         ! The data style to lines+symbols:linespoints
         ! Can be overwritten by options
 
         ! write signature
-        write ( file_unit, '(a)' ) '# ' // md_name
-        write ( file_unit, '(a)' ) '# ' // md_rev
-        write ( file_unit, '(a)' ) '# ' // md_lic
-        write ( file_unit, '(a)' )  ! emptyline
+        write ( this%file_unit, '(a)' ) '# ' // md_name
+        write ( this%file_unit, '(a)' ) '# ' // md_rev
+        write ( this%file_unit, '(a)' ) '# ' // md_lic
+        write ( this%file_unit, '(a)' )  ! emptyline
 
         ! write the global settings
-        write ( file_unit, '(a)' ) '# gnuplot global setting'
-        write ( file_unit, '(a)' ) 'set style data '//this%txtdatastyle  !set data style
-        write ( file_unit, '(a)' )  ! emptyline
+        write ( this%file_unit, '(a)' ) '# gnuplot global setting'
+        write ( this%file_unit, '(a)' ) 'set style data '//this%txtdatastyle  !set data style
+        write ( this%file_unit, '(a)' )  ! emptyline
 
         ! Write options
         if ( this%hasoptions ) then
-            write( unit = file_unit, fmt= '(a)') '# options'
-            write( unit = file_unit, fmt= '(a)') this%txtoptions
-            write ( file_unit, '(a)' )  ! emptyline
+            write( unit = this%file_unit, fmt= '(a)') '# options'
+            write( unit = this%file_unit, fmt= '(a)') this%txtoptions
+            write ( this%file_unit, '(a)' )  ! emptyline
         end if
 
         ! Check with plot scale: i.e linear, logx, logy, or log xy
         select case (this%plotscale)
             case ('semilogx')
-                write ( file_unit, '(a)' ) 'set logscale  x'
+                write ( this%file_unit, '(a)' ) 'set logscale  x'
             case ('semilogy')
-                write ( file_unit, '(a)' ) 'set logscale  y'
+                write ( this%file_unit, '(a)' ) 'set logscale  y'
             case ('loglog')
-                write ( file_unit, '(a)' ) 'set logscale  xy'
+                write ( this%file_unit, '(a)' ) 'set logscale  xy'
             case default !For linear xy plot or 3D plots
                 !pass
         end select
 
 
-        write( unit = file_unit, fmt= '(a)') '# axes setting'
+        write( unit = this%file_unit, fmt= '(a)') '# axes setting'
         if (this%hasxrange) then
-            write ( file_unit, '(a,f0.0,a,f0.0,a)' ) 'set xrange [',this%xrange(1),':',this%xrange(2),']'
+            write ( this%file_unit, '(a,f0.0,a,f0.0,a)' ) 'set xrange [',this%xrange(1),':',this%xrange(2),']'
         end if
 
         if (this%hasyrange) then
-            write ( file_unit, '(a,f0.0,a,f0.0,a)' ) 'set yrange [',this%yrange(1),':',this%yrange(2),']'
+            write ( this%file_unit, '(a,f0.0,a,f0.0,a)' ) 'set yrange [',this%yrange(1),':',this%yrange(2),']'
         end if
 
         if (this%haszrange) then
-            write ( file_unit, '(a,f0.0,a,f0.0,a)' ) 'set zrange [',this%zrange(1),':',this%zrange(2),']'
+            write ( this%file_unit, '(a,f0.0,a,f0.0,a)' ) 'set zrange [',this%zrange(1),':',this%zrange(2),']'
         end if
 
 
-        write( unit = file_unit, fmt= '(a)') '# plot annotation'
+        write( unit = this%file_unit, fmt= '(a)') '# plot annotation'
         if (this%hasplottitle) then
-            write ( file_unit, '(a)' ) 'set title  "' // trim(this%txtplottitle)// '"'
+            write ( this%file_unit, '(a)' ) 'set title  "' // trim(this%txtplottitle)// '"'
         end if
         if (this%hasxlabel) then
-            write ( file_unit, '(a)' ) 'set xlabel "'// trim(this%txtxlabel)//'"'
+            write ( this%file_unit, '(a)' ) 'set xlabel "'// trim(this%txtxlabel)//'"'
         end if
         if (this%hasylabel) then
-            write ( file_unit, '(a)' ) 'set ylabel "'//trim(this%txtylabel)//'"'
+            write ( this%file_unit, '(a)' ) 'set ylabel "'//trim(this%txtylabel)//'"'
         end if
         if (this%haszlabel) then
-            write ( file_unit, '(a)' ) 'set zlabel "'//trim(this%txtzlabel)//'"'
+            write ( this%file_unit, '(a)' ) 'set zlabel "'//trim(this%txtzlabel)//'"'
         end if
-        write ( file_unit, '(a)' )  ! emptyline
+        write ( this%file_unit, '(a)' )  ! emptyline
 
     end subroutine processcmd
 
@@ -1426,10 +1475,10 @@ contains
         ! Writes set of xy data into a file
         !..............................................................................
 
-        integer, intent(in) :: file_unit
-        integer, intent(in) :: ndata
-        real(wp), intent(in) :: x(:)
-        real(wp), intent(in), optional :: y(:)
+        integer,  intent(in)           ::  file_unit
+        integer,  intent(in)           ::  ndata
+        real(wp), intent(in)           ::  x(:)
+        real(wp), intent(in), optional ::  y(:)
 
         integer:: i
 
@@ -1450,7 +1499,7 @@ contains
 
 
 
-    subroutine create_outputfile(this, file_unit)
+    subroutine create_outputfile(this)
         !..............................................................................
         ! Create an output file, assign a file_unit
         ! for writing the gnuplot commands
@@ -1458,47 +1507,82 @@ contains
 
         ! Rev 0.18
         class(gpf), intent(inout)   :: this
-        integer, intent(out)        :: file_unit
 
-        integer :: lu
-        integer :: m
-        integer :: io_stat
-        logical :: isopen
-        m = 200
-        do lu = m, 10, -1
-            inquire (unit=lu, opened=isopen, iostat=io_stat)
-            if (io_stat.ne.0) cycle
-            if (.not.isopen) exit
-        end do
-
-        file_unit = lu
+        !************************************************************************
+        !************************************************************************
+        if (this%hasfileopen) then
+            ! there is nothing to do
+            return
+        end if
 
 
-        open ( unit = file_unit, file = this%txtfilename, status = 'replace', iostat = this%status )
+        !> Rev 0.2 animation
+
+        ! animation handling
+        if (this%hasanimation ) then
+            this%frame_number = this%frame_number + 1
+        end if
+
+
+        !**********************************************************************
+        !**********************************************************************
+        !**********************************************************************
+        !**********************************************************************
+
+        ! Open the output file
+        open ( newunit = this%file_unit, file = this%txtfilename, status = 'replace', iostat = this%status )
 
         if (this%status /= 0 ) then
-            this%msg= "gpf error: cannot open file for output"
-            print*, this%msg
+            print*, "md_helperproc, create_outputfile: cannot open file for output"
             stop
         end if
+
         ! write the general setting
-        write(unit=file_unit, fmt='(a)') 'set term ' // gnuplot_term_type // &
+        write(unit=this%file_unit, fmt='(a)') 'set term ' // gnuplot_term_type // &
             ' size ' // gnuplot_term_size // ' enhanced font "' // &
             gnuplot_term_font // '"'
+
+        if (this%hasmultiplot) then
+            write(this%file_unit, fmt='(a, I2, a, I2)') 'set multiplot layout ', &
+                this%multiplot_rows, ',',  this%multiplot_cols
+        end if
+        ! set flag true for file is opened
+        this%hasfileopen = .true.
 
     end subroutine create_outputfile
 
 
-    subroutine finalize_plot(this, file_unit)
+    subroutine finalize_plot(this)
         !..............................................................................
         ! To finalize the writing of gnuplot commands and close the output file.
         !..............................................................................
         class(gpf) :: this
-        integer, intent(in) :: file_unit
-        integer :: status_
 
-        close ( unit = file_unit )                                         ! close the script file
+        ! check for multiplots
+        if (this%hasmultiplot) then
+            if (this%multiplot_total_plots < this%multiplot_rows * this%multiplot_cols - 1 ) then
+                ! increment the number of plots
+                this%multiplot_total_plots = this%multiplot_total_plots + 1
+                return ! do not finalize plot, still there is places in multiplot
+            else
+                ! close multiplot
+                write(this%file_unit, fmt='(a)') 'unset multiplot'
+                ! reset multiplot flag
+                this%hasmultiplot = .false.
+
+            end if
+        end if
+
+        ! check for the animation
+
+
+
+        close ( unit = this%file_unit )     ! close the script file
+        this%hasfileopen = .false.          ! reset file open flag
+        this%hasanimation = .false.
         call execute_command_line ('gnuplot -persist '//this%txtfilename)  !   Now plot the results
+
+
 
     end subroutine finalize_plot
 
