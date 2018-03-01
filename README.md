@@ -22,7 +22,7 @@ Object Based Interface to GnuPlot from Fortran (ogpf)
 **plot**
 
 * plot a single vector v
->> plot(v)
+`plot(v)`
 * plot a vector y against vector x
 >> plot(x,y)
 * plot up to four pairs of x-y set at the same time
@@ -95,7 +95,7 @@ This section shows few example codes from **demo.f90**
 
 Will produce
 
-![Example 01](doc/exmp01.png)
+![Example 01](doc/exmp09.gif)
 
 * **Example 05**
 ```fortran
