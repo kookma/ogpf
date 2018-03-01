@@ -40,22 +40,15 @@ Object Based Interface to GnuPlot from Fortran (ogpf)
 * animation_start(delay)
 * animation_show()
 
+### Multiplot
+* multiplot(rows, cols)
+
 ## Mathematical Utility Functions
 * linspace(a,b,n)
 * linspace(a,b)
 * arange(a,b,dx)
 * meshgrid(X,Y, xgv,ygv)
 
-**linspace**
-* returns a linearly spaced vector with n points in [a, b]
-
-**arange**
-* generate a vector in form of [a, a+dx, a+2dx, a+3dx, ...]
-
- 
-**meshgrid**
-* generate mesh grid over a rectangular domain of [xmin xmax, ymin, max]
- 
 
 # Demo
 There is a collection of examples in demo.f90 to show the capabilities of ogpf.
@@ -306,5 +299,330 @@ Will produce
 Will produce
 
 ![Example 21](doc/exmp21.png)
+
+## 3D plots: surf and contour
+
+* **Example 101**
+
+Using different color palettes
+
+```fortran
+    subroutine exmp101
+
+        type(gpf):: gp
+        real(wp), allocatable:: x(:,:)
+        real(wp), allocatable:: y(:,:)
+        real(wp), allocatable:: z(:,:)
+        real(wp):: a=0.5d0
+        real(wp):: b=2.0d0
+        real(wp), allocatable :: xgrid(:)
+        real(wp), allocatable :: ygrid(:)
+        integer:: m
+        integer:: n
+
+        ! create 3D data
+        m=55 ! number of grid points in y direction
+        n=25 ! number of grid points in x direction
+        xgrid=linspace(-10.0_wp, 10.0_wp, m)
+        ygrid=linspace(0.0_wp, 5.0_wp, n)
+        allocate( z(m,n) )
+
+        call meshgrid(x, y, xgrid, ygrid) ! generate the 2D grid data
+        z=(x**2/a - y**2/b)
+
+        ! annotation
+        call gp%title('Example 101: Simple 3D plot')
+        call gp%xlabel('x-axis,...')
+        call gp%ylabel('y-axis,...')
+        call gp%zlabel('z-axis,...')
+
+        !plot the 3D data
+        call gp%surf(x, y, z, lspec='t "default color spec"' ) ! color palette: gnuplot default
+        call gp%surf(x, y, z, lspec='t "Ann Schnider set1"', palette='set1' ) ! color palette: set1
+        call gp%surf(x, y, z, lspec='t "Matlab Jet"', palette='jet' ) ! color palette: Matlab jet
+    end subroutine exmp101
+
+```
+Will produce
+
+![Example 101](doc/exmp101.png)
+![Example 101_2](doc/exmp101_2.png)
+![Example 101_3](doc/exmp101_3.png)
+
+
+* **Example 102**
+
+Simple surface plot with color palette
+
+
+```fortran
+   subroutine exmp102()
+        type(gpf):: gp
+
+        real(wp), parameter :: pi=4.0_wp*atan(1.0_wp)
+
+        real(wp), allocatable:: x(:,:)
+        real(wp), allocatable:: y(:,:)
+        real(wp), allocatable:: z(:,:)
+        integer:: m
+        integer:: n
+
+        ! generate data
+        call meshgrid(x, y, linspace(-0.75_wp*pi, 0.75_wp*pi, 35) ) ! xgrid == ygrid
+        m=size(x,1)
+        n=size(x,2)
+        allocate( z(m,n) )
+
+        !z= sin(x) * cos (y)
+        where (x**2 + y**2 == 0.0_wp)
+            z=1.0_wp
+        elsewhere
+            z=sin(x**2+y**2)/(x**2+y**2)
+        end where
+
+
+        call gp%title('Example 102: Simple 3D plot with color palette')
+        call gp%xlabel('x-axis,...')
+        call gp%ylabel('y-axis,...')
+        call gp%options('set style data lines')
+
+        !plot the 3D data
+        CALL gp%surf(X,Y,Z, palette='jet')
+
+    end subroutine exmp102
+```
+Will produce
+
+![Example ](doc/exmp102.png)
+
+
+* **Example 103**
+
+A beautiful surface plot
+
+```fortran
+    subroutine exmp103()
+
+        type(gpf):: gp
+        real(wp), allocatable:: x(:,:)
+        real(wp), allocatable:: y(:,:)
+        real(wp), allocatable:: z(:,:)
+        real(wp):: a=-0.5_wp
+        real(wp):: b= 0.5_wp
+        real(wp):: pi= 4.0_wp * atan(1.0_wp)
+        integer:: m
+        integer:: n
+
+        ! create 3D data
+        call meshgrid( x, y, linspace(a, b, 55) )
+        m=size(x,1)
+        n=size(x,2)
+        allocate( z(m,n) )
+        z= cos(2.0*pi*x) * sin(2.0*pi*y)
+
+
+
+        ! annotation
+        call gp%title('Example 103: A beautiful surface plot with hidden details')
+        call gp%options('set hidden3d')
+        call gp%options('unset key')
+
+        !plot the 3D data
+        call gp%surf(x, y, z, palette='jet' ) ! color palette: Matlab jet
+        ! contour
+        call gp%contour(x,y,z, palette='set1')
+
+    end subroutine exmp103
+```
+Will produce
+
+![Example ](doc/exmp103.png)
+
+
+* **Example 104**
+
+Cylindrical mapping
+
+
+```fortran
+    subroutine exmp104()
+        type(gpf):: gp
+        integer, parameter :: m = 35
+        integer, parameter :: n = 15
+        real(wp)           :: xv(m), yv(n)
+        real(wp), dimension(:,:), allocatable:: x,y,z
+        real(wp):: pi= 4.0_wp * atan(1.0_wp)
+
+        xv = linspace(0.0_wp, pi, m)
+        yv = linspace(0.0_wp, pi, n)
+        call meshgrid(x,y, xv, yv)
+        allocate( z(size(x,dim=1), size(x, dim=2)) )
+        z = sin(y)
+
+
+        ! advanced options
+        call gp%options('set mapping cylindrical')
+        call gp%options('unset tics')
+        call gp%options('unset border')
+        call gp%options('set view 147,312')
+        call gp%options('set hidden3d')
+
+        !
+        call gp%title('Example 104. Cylindrical Mapping')
+        call gp%surf(x,y,z)
+
+    end subroutine exmp104
+```
+Will produce
+
+![Example ](doc/exmp104.png)
+
+
+* **Example 105**
+
+Contour plot and surface plot
+
+
+```fortran
+
+    subroutine exmp105()
+        
+        type(gpf):: gp
+
+        real(wp), allocatable:: x(:,:)
+        real(wp), allocatable:: y(:,:)
+        real(wp), allocatable:: z(:,:)
+        integer:: m
+        integer:: n
+        real(wp), parameter :: pi=4.0_wp*atan(1.0_wp)
+
+        ! create the xyz data
+        call meshgrid(x, y, linspace(-2.0_wp,2.0_wp, 65), linspace(-2.0_wp,3.0_wp, 65)  )
+
+        m=size(x,1)
+        n=size(x,2)
+        allocate( z(m,n) )
+
+        z = x * exp(-x**2 - y**2)
+
+        call gp%options('unset key')
+        call gp%options('unset surface')
+        call gp%axis([real(wp):: -2, 2, -2, 3])
+
+        !plot the contour
+        call gp%title('Example 105: Contour plot')
+        call gp%options('unset border; unset tics')
+        call gp%surf(x,y,z, palette='accent')
+        call gp%contour(x,y,z, palette='jet')
+
+    end subroutine exmp105
+
+```
+Will produce
+
+![Example ](doc/exmp105.png)
+![Example ](doc/exmp105_2.png)
+
+
+* **Example 106**
+
+Animation with 3D plots
+
+
+```fortran
+   subroutine exmp106()
+
+        type(gpf):: gp
+        integer,  parameter :: n=25, m=55
+        real(wp) :: xv(m), yv(n), t
+        real(wp), allocatable :: x(:,:), y(:,:), z(:,:)
+        real(wp), parameter :: pi=4.0_wp*atan(1.0_wp)
+
+        ! generate data
+        xv = linspace(0.0_wp, 2.0_wp*pi, m)
+        yv = linspace(0.0_wp, 2.0_wp*pi, n)
+        call meshgrid(x, y, xv, yv)
+        z = sin(x) + cos(y)
+
+        call gp%title('Example 106. Animation of surface plot')
+        call gp%axis([0.0_wp, 2.0*pi, 0.0_wp, 2.0*pi])
+        call gp%options('unset colorbox')
+        call gp%options('set ticslevel 0')
+        call gp%axis([0.0_wp, 2.0*pi, 0.0_wp, 2.0*pi, -2.0_wp, 2.0_wp])
+
+        call gp%animation_start(1)
+        t=0.050_wp
+        do
+            ! add frames
+            call gp%surf(x, y, sin(t*pi/2.0)*z, palette='jet')
+            t=t+0.1_wp
+            if (t > 1.0_wp) exit
+        end do
+        ! show frames in ornithological order with a pause set in
+        ! animation_start
+        call gp%animation_show()
+
+    end subroutine exmp106
+
+```
+Will produce
+
+![Example 106](doc/exmp106.gif)
+
+
+* **Example 107**
+
+Multiplot layout for 3D plots
+
+```fortran
+  subroutine exmp107()
+        !...............................................................................
+        !Example 107: Multiplot layout in 3D and Contour plot
+        !...............................................................................
+        type(gpf):: gp
+
+        real(wp), allocatable:: x(:,:)
+        real(wp), allocatable:: y(:,:)
+        real(wp), allocatable:: z1(:,:)
+        real(wp), allocatable:: z2(:,:)
+        integer:: m
+        integer:: n
+        real(wp), parameter :: pi=4.0_wp*atan(1.0_wp)
+
+        ! create the xyz data
+        call meshgrid(x, y, linspace(-pi,pi, 60)  )
+
+        m=size(x,1)
+        n=size(x,2)
+        allocate( z1(m,n) )
+        allocate( z2(m,n) )
+
+        z1 = sin(x) + cos(y)
+        z2 = sin(x) * cos(y)
+
+        call gp%options('unset key')
+        call gp%axis([-pi,pi,-pi,pi])
+        call gp%options('unset colorbox')
+        call gp%options('set autoscale fix')
+        call gp%options('unset tics')
+
+        !plot the contour
+        call gp%title('Example 105: Contour plot')
+        call gp%multiplot(1,2)
+        call gp%surf(x,y,z1)
+        call gp%surf(x,y,z2)
+
+        call gp%multiplot(2,1)
+        call gp%options('set colorbox')
+        call gp%options('set tics')
+        call gp%contour(x,y,z1, palette='jet')
+        call gp%contour(x,y,z2, palette='set1')
+
+
+    end subroutine exmp107
+```
+Will produce
+
+![Example 107](doc/exmp107_2.png)
 
 

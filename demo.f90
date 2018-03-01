@@ -1128,11 +1128,10 @@ contains
 
     end subroutine exmp104
 
-
+    !...............................................................................
+    !Example 105: contour plot
+    !...............................................................................
     subroutine exmp105()
-        !...............................................................................
-        !Example 105: contour plot
-        !...............................................................................
         type(gpf):: gp
 
         real(wp), allocatable:: x(:,:)
@@ -1156,9 +1155,10 @@ contains
         call gp%axis([real(wp):: -2, 2, -2, 3])
 
         !plot the contour
-        call gp%title('Example 105: Contour plot')
         call gp%options('unset border; unset tics')
+        call gp%title('Example 105: Surface plot')
         call gp%surf(x,y,z, palette='accent')
+        call gp%title('Example 105: Contour plot')
         call gp%contour(x,y,z, palette='jet')
 
     end subroutine exmp105
@@ -1201,10 +1201,10 @@ contains
 
     end subroutine exmp106
 
-  subroutine exmp107()
-        !...............................................................................
-        !Example 107: Multiplot layout in 3D and Contour plot
-        !...............................................................................
+    !...............................................................................
+    !Example 107: Multiplot layout in 3D and Contour plot
+    !...............................................................................
+    subroutine exmp107()
         type(gpf):: gp
 
         real(wp), allocatable:: x(:,:)
@@ -1233,12 +1233,13 @@ contains
         call gp%options('unset tics')
 
         !plot the contour
-        call gp%title('Example 105: Contour plot')
+        call gp%title('Example 107: surface plot')
         call gp%multiplot(1,2)
         call gp%surf(x,y,z1)
         call gp%surf(x,y,z2)
 
         call gp%multiplot(2,1)
+        call gp%title('Example 107: Contour plot')
         call gp%options('set colorbox')
         call gp%options('set tics')
         call gp%contour(x,y,z1, palette='jet')
