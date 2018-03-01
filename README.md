@@ -69,6 +69,44 @@ These color palettes can be used with:
 * accent
 * jet
 
+## The ogpf library other features 
+There are a plenety commands to customise the plots. This includes:
+
+* Plot annotation (e.g. title, xlabel, ylabel, and zlabel)
+* Axes setting (e.g. xrange, yrange, zrange, and grid)
+* Line and marker color and style
+* Gnuplot options (e.g. fonts, tics format, frame format,... )
+
+### The ogpf options command
+The option command is a very powerful command and can be used to customize the gnuplot in many ways. Options can be set by calling the ogpf options.
+In every call, it is possible to set several options separated by semicolon or options can be set by several calls. Below shows few samples:
+
+* **Sample 1**
+
+Set the legend (key) at the right bottom of window
+
+`call gp%options('set key bottom right')`
+
+* **Sample 2**
+
+Define a new line style
+
+`call gp%options('set style line 1 lc rgb "blue" lt 1 lw 2 pt 6 ps 1.5')`
+
+* **Sample 3**
+
+Use several options each uses separate command
+
+`call gp%options('set tics')`
+
+`call gp%options('set tics font ",8"') ! font size for tics`
+
+
+* **Sample 4** 
+
+Set several options at the same time using semicolon as delimiter
+
+`call gp%options('unset tics; unset colorbox') `
 
 # Demo
 There is a collection of examples in demo.f90 to show the capabilities of ogpf.
