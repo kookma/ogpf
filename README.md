@@ -1,4 +1,4 @@
-## ogpf
+# ogpf
 Object Based Interface to GnuPlot from Fortran (ogpf)
 
 ### GnuPlot Interface
@@ -17,49 +17,52 @@ Object Based Interface to GnuPlot from Fortran (ogpf)
                url:    aut.ac.ir/m.rahmani
                github: github.com/kookma
                email:  m[dot]rahmani[at]aut[dot]ac[dot]ir
+    License:   MIT. Please always give a link to this repo
 
-### Procedures
-**plot**
+## PLotting Capabilities
+### 2D Plots
+* plot(v)
+* plot(x,y)
+* plot(x,y, linespec)
+* plot(x1,y1,ls1, x2,y2,ls2, x3,y3,ls3, x4,y4,ls4)
+* plot(x, M)
+* semilogx(x,y)
+* semilogy(x,y)
+* loglog(x,y)
+### 3D Plots
+* surf(x,y,z)
+* surf(x,y,z,lspec)
+* surf(x,y,z, palette)
+* surf(z, palette)
+* contour(x,y,z,palette)
+* contour(z,palette)
+### Animation
+* animation_start(delay)
+* animation_show()
 
-* plot a single vector v
-`plot(v)`
-* plot a vector y against vector x
->> plot(x,y)
-* plot up to four pairs of x-y set at the same time
->> plot(x1, y1, ls1, x2, y2, ls2, x3, y3, ls3, x4, y4, ls4)
-* plot a matrix Y versus a vector x
+## Mathematical Utility Functions
+* linspace(a,b,n)
+* linspace(a,b)
+* arange(a,b,dx)
+* meshgrid(X,Y, xgv,ygv)
 
-**surf**
-
-* surface plot
-* mesh plot
-* contour plot
-
-**script**
-* use a customised script to plot data from inside a fortran code
- 
- **Animations**
- * ogpf can generate animation by 
- 
- 
- 
- 
-**meshgrid**
-* generate mesh grid over a rectangular domain of [xmin xmax, ymin, max]
- 
 **linspace**
 * returns a linearly spaced vector with n points in [a, b]
 
 **arange**
 * generate a vector in form of [a, a+dx, a+2dx, a+3dx, ...]
 
-### Demo
+ 
+**meshgrid**
+* generate mesh grid over a rectangular domain of [xmin xmax, ymin, max]
+ 
+
+# Demo
 There is a collection of examples in demo.f90 to show the capabilities of ogpf.
 
 ### Easy to use
-To use ogpf in your project, add these to files to your fortran project (code)
+To use ogpf in your project, add the library file to your fortran project (code)
 * ogpf.f90 (the main library)
-* select_precision.f90 (to choose the working precision)
 For details see 'demo.f90'
 
 ##### Important Note
