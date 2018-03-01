@@ -485,7 +485,7 @@ contains
         call gp%axis([-pi, pi, -1.2_wp, 1.2_wp])
         call gp%options('set grid')
         ! add frames
-        do i=1, n, 10
+        do i=1, n
             y(i) = sin(x(i))
             z(i) = cos(x(i))
             ! each plot command adds one frame
@@ -531,7 +531,7 @@ contains
             x2=x, y2=2.00*y, ls2='t "y=2.0x^2" ls 2', &
             x3=x, y3=2.50*y, ls3='t "y=2.5x^2" ls 3')
         call mp%reset()
-        call mp%title('Reset to initiali setting')
+        call mp%title('Reset to initial setting')
         call mp%plot(x,2*y)
     end subroutine exmp10
 
@@ -732,11 +732,11 @@ contains
 
     end subroutine exmp17
 
+    !...............................................................................
+    ! Example 18: Running an external script file
+    !...............................................................................
 
     subroutine exmp18()
-        !...............................................................................
-        ! Example 18: Running an external script file
-        !...............................................................................
 
         !Use gnuplot script
         !to send a special external script file to gnuplot
@@ -790,13 +790,10 @@ contains
 
     end subroutine exmp19
 
-
-
+    !...............................................................................
+    ! Example 20: Making a scatter plot
+    !...............................................................................
     subroutine exmp20()
-        !...............................................................................
-        ! Example 20: Making a scatter plot
-        !...............................................................................
-
         type(gpf):: gp
         integer,  parameter :: n=750
         real(wp) :: x(n), y(n), ym(n), noise(n), d(n)
@@ -832,11 +829,10 @@ contains
 
     end subroutine exmp20
 
+    !...............................................................................
+    ! Example 21: Making a stem plot
+    !...............................................................................
     subroutine exmp21()
-        !...............................................................................
-        ! Example 21: Making a stem plot
-        !...............................................................................
-
         type(gpf):: gp
         integer,  parameter :: n=50
         real(wp) :: x(n), y(n)
@@ -854,10 +850,10 @@ contains
     end subroutine exmp21
 
 
+    !...............................................................................
+    ! Example 22: Stem plot animation
+    !...............................................................................
     subroutine exmp22()
-        !...............................................................................
-        ! Example 22: Stem plot animation
-        !...............................................................................
 
         type(gpf):: gp
         integer,  parameter :: n=50
@@ -873,7 +869,7 @@ contains
 
         ! start animation
         call gp%animation_start(delay=1) ! one second delay between frames
-        do i=1,n,10 ! add frames
+        do i=1,n ! add frames
             ! each plot command adds one frame
             call gp%plot(x(1:i), y(1:i), 'with impulses lw 2', &
                 x(1:i), y(1:i),  'with points pt 6')
@@ -882,14 +878,13 @@ contains
         ! set by animation_start
         call gp%animation_show()
 
-
     end subroutine exmp22
 
-    subroutine exmp23()
-        !...............................................................................
-        ! Example 21: Another animation using matrix plot
-        !...............................................................................
 
+    !...............................................................................
+    ! Example 21: Another animation using matrix plot
+    !...............................................................................
+    subroutine exmp23()
         type(gpf):: gp
         integer,  parameter :: n=55
         real(wp), parameter :: pi=4.0_wp*atan(1.0_wp)
@@ -913,11 +908,11 @@ contains
     end subroutine exmp23
 
 
+    !...............................................................................
+    ! Example 24: Use of multiplot layout
+    !...............................................................................
 
     subroutine exmp24()
-        !...............................................................................
-        ! Example 24: Use of multiplot layout
-        !...............................................................................
 
         type(gpf):: gp
         integer,  parameter :: n=25
@@ -945,14 +940,14 @@ contains
     end subroutine exmp24
 
 
+    !...............................................................................
+    ! Example 24: Use multiplot followed by other plot command
+    !...............................................................................
 
     subroutine exmp25()
-        !...............................................................................
-        ! Example 24: Use multiplot followed by other plot command
-        !...............................................................................
 
         type(gpf):: gp
-        integer,  parameter :: n=55
+        integer,  parameter :: n=25
         real(wp), parameter :: pi=4.0_wp*atan(1.0_wp)
         real(wp) :: x(n), y(n,4)
         integer :: i
@@ -963,9 +958,12 @@ contains
         y(:,3) = (1-x)*sin(x)
         y(:,4) = (1-x)*cos(x)
 
+        ! general options
+        call gp%options('set tics font ",8"')
+
         call gp%multiplot(2,2)
         do i=1, 4
-            call gp%plot(x, y(:,i))
+            call gp%plot(x, y(:,i), 'lt 4 pt 6')
         end do
         ! a new window will be started when all places in the multiplot
         ! layout is occupied. The multiplot window will be closed
@@ -1087,6 +1085,7 @@ contains
         ! annotation
         call gp%title('Example 103: A beautiful surface plot with hidden details')
         call gp%options('set hidden3d')
+        call gp%options('set tics font ",8"')
         call gp%options('unset key')
 
         !plot the 3D data
@@ -1242,6 +1241,7 @@ contains
         call gp%title('Example 107: Contour plot')
         call gp%options('set colorbox')
         call gp%options('set tics')
+        call gp%options('set tics font ",8"') ! font size for tics
         call gp%contour(x,y,z1, palette='jet')
         call gp%contour(x,y,z2, palette='set1')
 
