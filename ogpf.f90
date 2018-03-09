@@ -15,8 +15,30 @@
 !               url:    aut.ac.ir/m.rahmani
 !               github: github.com/kookma
 !               email:  m[dot]rahmani[at]aut[dot]ac[dot]ir
+!
+!
+! Acknowledgement:
+! Special thanks to Hagen Wierstorf (http://www.gnuplotting.org)
+! For vluable codes and examples on using gnuplot
+! Some examples and color palletes are provided by gnuplotting.
+!
+
 
 ! Revision History
+
+! Revision 0.22
+! Date: Mar 9th, 2018
+! - a new procedure called use_extra_configuration is used to set general gnuplot settings
+! - new type for labels (xlabel, ylabel, zlabel, title,...)
+! - all lables now accept text color, font name, font size, rorate by degree
+! - Secondary axes can use different scale (linear or logarithmic)
+! - subroutine plot2d_matrix_vs_matrix(xmat,ymat)
+!    now plots a matrix columns ymat aganist another matrix column xmat
+! - added more examples
+
+! Revision 0.21
+! Date: Mar 8th, 2018
+! - new axes to plot command to use secondary axes added!
 
 
 ! Revision:  0.20
@@ -31,6 +53,7 @@
 !  - splot now uses datablok instead of inline data
 !  - meshgrid now support full grid vector
 !  - arange a numpy similar function to create a range in the form of [xa, xa+dx, xa+2*dx, ...]
+!  - new num2str routines
 
 
 
@@ -114,7 +137,9 @@ module ogpf
     implicit none
 
     private
+
     public arange, linspace, meshgrid, wp
+    public num2str
 
     !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! select precision
@@ -129,55 +154,74 @@ module ogpf
     integer, parameter :: wp = dp
     !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    !
+    ! Library information
     character(len=*), parameter :: md_name = 'ogpf libray'
-    character(len=*), parameter :: md_rev  = 'Rev. 0.2 of Feb 22, 2018'
+    character(len=*), parameter :: md_rev  = 'Rev. 0.22 of March 9th, 2018'
     character(len=*), parameter :: md_lic  = 'Licence: MIT'
 
-    ! Configuration parameters
+    ! ogpf Configuration parameters
     ! The terminal and font have been set for Windows operating system
     ! Correct to meet the requirements on other OS like Linux and Mac.
-    character(len=*), parameter ::  gnuplot_term_type= 'wxt'                      ! Output terminal
-    character(len=*), parameter ::  gnuplot_term_font= 'verdana,10'               ! font
-    character(len=*), parameter ::  gnuplot_term_size= '640,480'                  ! plot window size
+    character(len=*), parameter ::  gnuplot_term_type = 'wxt'                      ! Output terminal
+    character(len=*), parameter ::  gnuplot_term_font = 'verdana,10'               ! font
+    character(len=*), parameter ::  gnuplot_term_size = '640,480'   !'960,840'                  ! plot window size
     character(len=*), parameter ::  gnuplot_output_filename='ogpf_temp_script.gp' ! temporary file for output
+    ! extra configuration can be set using ogpf object
 
+    ! module procedure
+    interface num2str ! convert integer, real, double precision into string
+        module procedure num2str_i4
+        module procedure num2str_r4
+        module procedure num2str_r8
+    end interface
+
+    !> 0.22
+    ! tplabel is a structure for gnuplot labels including
+    ! title, xlabel, x2label, ylabel, ...
+    integer, parameter, private :: NOT_INITIALIZED = -32000
+    type tplabel
+        logical                       :: has_label = .false.
+        character(len=:), allocatable :: lbltext
+        character(len=:), allocatable :: lblcolor
+        character(len=:), allocatable :: lblfontname
+        integer                       :: lblfontsize = NOT_INITIALIZED
+        integer                       :: lblrotate   = NOT_INITIALIZED
+    end type tplabel
 
 
     type, public :: gpf
-        ! the gpf class
+        ! the gpf class implement the object for using gnuplot from fortran in a semi-interactive mode!
+        ! the fortran actually do the job and write out the commands and data in a single file and then
+        ! calls the gnuplot by shell command to plot the data
 
         private
 
-        character(len=:), allocatable  :: txtplottitle
-        character(len=:), allocatable  :: txtxlabel
-        character(len=:), allocatable  :: txtylabel
-        character(len=:), allocatable  :: txtzlabel
-        character(len=:), allocatable  :: txtoptions
-        character(len=:), allocatable  :: txtscript
-        character(len=:), allocatable  :: txtdatastyle ! 2D: linespoints, 3D: lines
+        !> 0.22
+        type(tplabel) :: tpplottitle
+        type(tplabel) :: tpxlabel
+        type(tplabel) :: tpx2label
+        type(tplabel) :: tpylabel
+        type(tplabel) :: tpy2label
+        type(tplabel) :: tpzlabel
 
-        logical :: hasplottitle   = .false.
-        logical :: hasxlabel      = .false.
-        logical :: hasylabel      = .false.
-        logical :: haszlabel      = .false.
+        character(len=:), allocatable  :: txtoptions    ! a long string to store all type of gnuplot options
+        character(len=:), allocatable  :: txtscript     ! a long string to store gnuplot script
+        character(len=:), allocatable  :: txtdatastyle  ! lines, points, linepoints
+
         logical :: hasxrange      = .false.
+        logical :: hasx2range     = .false.
         logical :: hasyrange      = .false.
+        logical :: hasy2range     = .false.
         logical :: haszrange      = .false.
         logical :: hasoptions     = .false.
         logical :: hasanimation   = .false.
+        logical :: hasfilename    = .false.
         logical :: hasfileopen    = .false.
 
         real(wp)           :: xrange(2), yrange(2), zrange(2)
+        real(wp)           :: x2range(2), y2range(2)
+        character(len=8)   :: plotscale
 
-        integer, public    :: pause_seconds = 0  ! keep plot on screen for this value in seconds
-
-        character(len=:), allocatable   :: msg      !Message from plot procedures
-        integer                         :: status=0 !Status from plot procedures
-        character(len=25)               :: txtfilename=gnuplot_output_filename
-        character(len=8)                :: plotscale
-        integer                         :: file_unit      ! file unit identifier
-        integer                         :: frame_number   ! frame number in animation
 
         ! multiplot parameters
         logical :: hasmultiplot = .false.
@@ -185,12 +229,34 @@ module ogpf
         integer :: multiplot_cols
         integer :: multiplot_total_plots
 
+        ! animation
+        integer  :: pause_seconds = 0  ! keep plot on screen for this value in seconds
+        integer                         :: frame_number   ! frame number in animation
+
+        ! use for debugging and error handling
+        character(len=:), allocatable   :: msg      !Message from plot procedures
+        integer                         :: status=0 !Status from plot procedures
+
+        !
+        integer                         :: file_unit      ! file unit identifier
+        character(len=:), allocatable   :: txtfilename    ! the name of physical file
+                                                          ! to write the gnuplot script
+
+
+        ! ogpf preset configuration (kind of gnuplot initialization)
+        logical :: preset_configuration = .true.
+
+
     contains
 
         private
 
+        ! local private procedures
+        procedure, pass, private :: preset_gnuplot_config
+
         procedure, pass, private :: plot2d_vector_vs_vector
         procedure, pass, private :: plot2d_matrix_vs_vector
+        procedure, pass, private :: plot2d_matrix_vs_matrix
 
         procedure, pass, private :: semilogxv
         procedure, pass, private :: semilogxm
@@ -199,30 +265,42 @@ module ogpf
         procedure, pass, private :: loglogv
         procedure, pass, private :: loglogm
 
+        !> 0.22
+        procedure, pass, private :: set_label
+
         ! public procedures
         procedure, pass, public :: options      => set_options
         procedure, pass, public :: title        => set_plottitle
         procedure, pass, public :: xlabel       => set_xlabel
+        procedure, pass, public :: x2label      => set_x2label
         procedure, pass, public :: ylabel       => set_ylabel
+        procedure, pass, public :: y2label      => set_y2label
         procedure, pass, public :: zlabel       => set_zlabel
         procedure, pass, public :: axis         => set_axis
+        procedure, pass, public :: axis_sc      => set_secondary_axis
         procedure, pass, public :: filename     => set_filename
         procedure, pass, public :: reset        => reset_to_defaults
+        procedure, pass, public :: preset       => use_preset_configuration
+
 
         procedure, pass, public :: multiplot  => sub_multiplot
-        generic, public         :: plot       => plot2d_vector_vs_vector, plot2d_matrix_vs_vector
+        generic, public         :: plot       => plot2d_vector_vs_vector, &
+                                                 plot2d_matrix_vs_vector, &
+                                                 plot2d_matrix_vs_matrix
         generic, public         :: semilogx   => semilogxv, semilogxm
         generic, public         :: semilogy   => semilogyv, semilogym
         generic, public         :: loglog     => loglogv, loglogm
-        procedure, pass, public :: surf       => splot
-        procedure, pass, public :: contour    => cplot
+
+        procedure, pass, public :: surf       => splot  ! 3D surface plot
+        procedure, pass, public :: contour    => cplot  ! contour plot
+
         procedure, pass, public :: fplot      => function_plot
+
         procedure, pass, public :: add_script => addscript
         procedure, pass, public :: run_script => runscript
-        !Rev 0.20
+
         procedure, pass, public :: animation_start => sub_animation_start
         procedure, pass, public :: animation_show  => sub_animation_show
-
 
     end type gpf
 
@@ -234,9 +312,63 @@ contains
     !!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+    subroutine use_preset_configuration(this,flag)
+        !..............................................................................
+        !Set a flag to tell ogpf if the customized gnuplot configuration should
+        !be used
+        !..............................................................................
+
+        class(gpf):: this
+        logical, intent(in) :: flag
+
+        ! default is true
+        this%preset_configuration = flag
+
+    end subroutine use_preset_configuration
+
+
+
+    subroutine set_filename(this,string)
+        !..............................................................................
+        !Set a file name for plot command output
+        !This file can be used later by gnuplot as an script file to reproduce the plot
+        !..............................................................................
+
+        class(gpf):: this
+        character(len=*), intent(in) :: string
+
+        this%txtfilename = trim(string)
+        this%hasfilename = .true.
+
+    end subroutine set_filename
+
+
+    subroutine set_options(this,stropt)
+        !..............................................................................
+        ! Set the plot options. This is a very powerfull procedure accepts many types
+        ! of gnuplot command and customization
+        !..............................................................................
+
+        class(gpf):: this
+        character(len=*), intent(in) :: stropt
+
+        if (len_trim(this%txtoptions) == 0 ) then
+            this%txtoptions = '' ! initialize string
+        end if
+        if ( len_trim(stropt)>0 ) then
+            this%txtoptions = this%txtoptions // splitstr(stropt)
+        end if
+
+        this%hasoptions=.true.
+
+    end subroutine set_options
+
+
+
+
     subroutine set_axis(this,rng)
         !..............................................................................
-        !Set the z label
+        !Set the axes limits in form of [xmin, xmax, ymin, ymax, zmin, zmax]
         !..............................................................................
 
         class(gpf):: this
@@ -267,88 +399,184 @@ contains
     end subroutine set_axis
 
 
-    subroutine set_filename(this,string)
+    subroutine set_secondary_axis(this,rng)
         !..............................................................................
-        !Set a file name for plot command output
-        !This file can be used later by gnuplot as an script file to reproduce the plot
-        !..............................................................................
-
-        class(gpf):: this
-        character(len=*), intent(in) :: string
-
-        this%txtfilename=trim(string)
-
-    end subroutine set_filename
-
-
-    subroutine set_options(this,stropt)
-        !..............................................................................
-        !Set the plot options
+        !Set the secondary axes limits in form of [x2min, x2max, y2min, y2max]
         !..............................................................................
 
         class(gpf):: this
-        character(len=*), intent(in) :: stropt
+        real(wp), intent(in) :: rng(:)
+        integer :: n
+        n=size(rng,dim=1)
+        select case(n)
+            case(2) !Only the range for x2-axis has been sent
+                this%hasx2range=.true.
+                this%x2range=rng(1:2)
+            case(4)
+                this%hasx2range=.true.
+                this%hasy2range=.true.
+                this%x2range=rng(1:2)
+                this%y2range=rng(3:4)
+            case default
+                print*, 'gpf error: wrong axis range setting!'
+                return
+        end select
 
-        if (len_trim(this%txtoptions) == 0 ) then
-            this%txtoptions = '' ! initialize string
-        end if
-        if ( len_trim(stropt)>0 ) then
-            this%txtoptions = this%txtoptions // splitstr(stropt)
-        end if
-
-        this%hasoptions=.true.
-
-    end subroutine set_options
+    end subroutine set_secondary_axis
 
 
-
-    subroutine set_plottitle(this,string)
+    subroutine set_plottitle(this, string, textcolor, font_size, font_name, rotate)
         !..............................................................................
         !Set the plot title
         !..............................................................................
-
         class(gpf):: this
-        character(len=*), intent(in) :: string
-        this%txtplottitle=trim(string)
-        this%hasplottitle=.true.
+        character(len=*), intent(in)           :: string
+        character(len=*), intent(in), optional :: textcolor
+        integer, optional                      :: font_size
+        character(len=*), intent(in), optional :: font_name
+        integer, optional                      :: rotate
+
+        call this%set_label('plot_title', string, textcolor, font_size, font_name, rotate)
 
     end subroutine set_plottitle
 
 
-    subroutine set_xlabel(this,string)
+    subroutine set_xlabel(this, string, textcolor, font_size, font_name, rotate)
         !..............................................................................
         !Set the xlabel
         !..............................................................................
         class(gpf):: this
-        character(len=*), intent(in) :: string
-        this%txtxlabel=trim(string)
-        this%hasxlabel=.true.
+        character(len=*), intent(in)           :: string
+        character(len=*), intent(in), optional :: textcolor
+        integer, optional                      :: font_size
+        character(len=*), intent(in), optional :: font_name
+        integer, optional                      :: rotate
+
+        call this%set_label('xlabel', string, textcolor, font_size, font_name, rotate)
 
     end subroutine set_xlabel
 
 
-    subroutine set_ylabel(this,string)
+    subroutine set_x2label(this, string, textcolor, font_size, font_name, rotate)
+        !..............................................................................
+        !Set the x2label
+        !..............................................................................
+        class(gpf):: this
+        character(len=*), intent(in)           :: string
+        character(len=*), intent(in), optional :: textcolor
+        integer, optional                      :: font_size
+        character(len=*), intent(in), optional :: font_name
+        integer, optional                      :: rotate
+
+        call this%set_label('x2label', string, textcolor, font_size, font_name, rotate)
+
+    end subroutine set_x2label
+
+
+    subroutine set_ylabel(this, string, textcolor, font_size, font_name, rotate)
         !..............................................................................
         !Set the ylabel
         !..............................................................................
         class(gpf):: this
-        character(len=*), intent(in) :: string
-        this%txtylabel=trim(string)
-        this%hasylabel=.true.
+        character(len=*), intent(in)           :: string
+        character(len=*), intent(in), optional :: textcolor
+        integer, optional                      :: font_size
+        character(len=*), intent(in), optional :: font_name
+        integer, optional                      :: rotate
+
+        call this%set_label('ylabel', string, textcolor, font_size, font_name, rotate)
 
     end subroutine set_ylabel
 
 
-    subroutine set_zlabel(this,string)
+
+    subroutine set_y2label(this, string, textcolor, font_size, font_name, rotate)
         !..............................................................................
-        !Set the z label
+        !Set the y2label
         !..............................................................................
         class(gpf):: this
-        character(len=*), intent(in) :: string
-        this%txtzlabel=trim(string)
-        this%haszlabel=.true.
+        character(len=*), intent(in)           :: string
+        character(len=*), intent(in), optional :: textcolor
+        integer, optional                      :: font_size
+        character(len=*), intent(in), optional :: font_name
+        integer, optional                      :: rotate
+
+        call this%set_label('y2label', string, textcolor, font_size, font_name, rotate)
+
+    end subroutine set_y2label
+
+
+    subroutine set_zlabel(this, string, textcolor, font_size, font_name, rotate)
+        !..............................................................................
+        !Set the zlabel
+        !..............................................................................
+        class(gpf):: this
+        character(len=*), intent(in)           :: string
+        character(len=*), intent(in), optional :: textcolor
+        integer, optional                      :: font_size
+        character(len=*), intent(in), optional :: font_name
+        integer, optional                      :: rotate
+
+        call this%set_label('zlabel', string, textcolor, font_size, font_name, rotate)
 
     end subroutine set_zlabel
+
+
+    !> 0.22
+
+    subroutine set_label(this, lblname, lbltext, lblcolor, font_size, font_name, rotate)
+        !..............................................................................
+        ! Set the text, color, font, size and rotation for labels including
+        ! title, xlabel, x2label, ylabel, ....
+        !..............................................................................
+
+        class(gpf):: this
+        character(len=*), intent(in)           :: lblname
+        character(len=*), intent(in)           :: lbltext
+        character(len=*), intent(in), optional :: lblcolor
+        character(len=*), intent(in), optional :: font_name
+        integer, optional :: font_size
+        integer, optional                      :: rotate
+
+        ! local variable
+        type(tplabel) :: label
+
+        label%has_label = .true.
+        label%lbltext   = trim(lbltext)
+
+        if (present(lblcolor)) then
+            label%lblcolor = lblcolor
+        end if
+
+        if (present(font_name)) then
+            label%lblfontname = font_name
+        end if
+
+        if (present(font_size)) then
+            label%lblfontsize = font_size
+        end if
+
+        if (present(rotate)) then
+            label%lblrotate = rotate
+        end if
+
+        select case (lblname)
+            case ('xlabel')
+                this%tpxlabel     = label
+            case ('x2label')
+                this%tpx2label    = label
+            case ('ylabel')
+                this%tpylabel     = label
+            case ('y2label')
+                this%tpy2label    = label
+            case ('zlabel')
+                this%tpzlabel     = label
+            case ('plot_title')
+                this%tpplottitle  = label
+        end select
+
+
+    end subroutine set_label
 
 
 
@@ -358,20 +586,36 @@ contains
         !...............................................................................
         class(gpf):: this
 
-        this%txtplottitle   = ""
-        this%txtxlabel      = ""
-        this%txtylabel      = ""
-        this%txtoptions     = ""
-        this%txtfilename    = gnuplot_output_filename
+        this%preset_configuration    = .true.
+        this%txtfilename             = gnuplot_output_filename
 
-        this%hasoptions     = .false.
-        this%hasplottitle   = .false.
-        this%hasxlabel      = .false.
-        this%hasylabel      = .false.
-        this%haszlabel      = .false.
-        this%hasxrange      = .false.
-        this%hasyrange      = .false.
-        this%haszrange      = .false.
+        if (allocated(this%txtoptions))    deallocate(this%txtoptions)
+        if (allocated(this%txtscript))     deallocate(this%txtscript)
+        if (allocated(this%txtdatastyle))  deallocate(this%txtdatastyle)
+        if (allocated(this%msg))           deallocate(this%msg)
+
+        this%hasoptions            = .false.
+
+        this%hasxrange             = .false.
+        this%hasx2range            = .false.
+        this%hasyrange             = .false.
+        this%hasy2range            = .false.
+        this%haszrange             = .false.
+
+        this%pause_seconds         = 0
+        this%status                = 0
+        this%hasanimation          = .false.
+        this%hasfileopen           = .false.
+        this%hasmultiplot          = .false.
+
+        this%plotscale             = ''
+        this%tpplottitle%has_label =.false.
+        this%tpxlabel%has_label    =.false.
+        this%tpx2label%has_label   =.false.
+        this%tpylabel%has_label    =.false.
+        this%tpy2label%has_label   =.false.
+        this%tpzlabel%has_label    =.false.
+
 
     end subroutine reset_to_defaults
 
@@ -381,12 +625,11 @@ contains
     !!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-    !..............................................................................
     subroutine sub_multiplot(this, rows, cols)
         !..............................................................................
-
         ! This subroutine sets flag and number of rows and columns in case
         ! of multiplot layout
+        !..............................................................................
 
         class(gpf):: this
         integer, intent(in) :: rows
@@ -421,36 +664,43 @@ contains
     end subroutine sub_multiplot
 
 
-    subroutine plot2d_vector_vs_vector(this, x1, y1, ls1, &
-            x2, y2, ls2, &
-            x3, y3, ls3, &
-            x4, y4, ls4  )
+    subroutine plot2d_vector_vs_vector(this, x1, y1, ls1, axes1, &
+            x2, y2, ls2, axes2, &
+            x3, y3, ls3, axes3, &
+            x4, y4, ls4, axes4  )
         !..............................................................................
         ! This procedure plots:
         !   1. A vector against another vector (xy plot)
-        !   2. A vector versus its element indices.
+        !   2. A vector versus its element indices (yi plot).
         !   3. Can accept up to 4 data sets as x,y pairs!
         ! Arguments
         ! xi, yi vectors of data series,
-        ! lsi a string maximum 80 characters containing the line specification, legends, ...
+        ! lsi a string maximum 80 characters containing the line specification,
+        ! legends, ...
+        ! axesi is the axes for plotting: secondary axes are x2, and y2
         !..............................................................................
+
         class(gpf):: this
         ! Input vector
-        real(wp),  intent(in)                          :: x1(:)
-        real(wp),  intent(in), optional                :: y1(:)
-        character(len=*),  intent(in), optional        :: ls1
+        real(wp),  intent(in)                          :: x1(:)  ! vector of data for x
+        real(wp),  intent(in), optional                :: y1(:)  ! vector of data for y
+        character(len=*),  intent(in), optional        :: ls1    ! line specification
+        character(len=*),  intent(in), optional        :: axes1
 
         real(wp),  intent(in), dimension(:), optional  :: x2
         real(wp),  intent(in), dimension(:), optional  :: y2
         character(len=*),  intent(in), optional        :: ls2
+        character(len=*),  intent(in), optional        :: axes2
 
         real(wp),  intent(in), dimension(:), optional  :: x3
         real(wp),  intent(in), dimension(:), optional  :: y3
         character(len=*),  intent(in), optional        :: ls3
+        character(len=*),  intent(in), optional        :: axes3
 
         real(wp),  intent(in), dimension(:), optional  :: x4
         real(wp),  intent(in), dimension(:), optional  :: y4
         character(len=*),  intent(in), optional        :: ls4
+        character(len=*),  intent(in), optional        :: axes4
 
         !   Local variables
         !----------------------------------------------------------------------
@@ -466,11 +716,12 @@ contains
         integer::           number_of_plots
         character(len=3)::  plottype
         integer:: i
-        character(len=80)::  pltstring(4)  !Four 80 character lines
+        character(len=80) ::  pltstring(4)  ! Four 80 characters string
 
         !Initialize variables
-        plottype=''
-        pltstring=''
+        plottype  = ''
+        pltstring = ''
+
         !   Check the input
         nx1=size(x1)
         if ((present(y1) )) then
@@ -479,7 +730,7 @@ contains
                 plottype='xy1'
                 number_of_plots=1
             else
-                print*, 'gpf error: length of x1 and y1 doesnot match'
+                print*, md_name // ':plot2d_vector_vs_vector:' // 'length of x1 and y1 does not match'
                 return
             end if
         else !plot only x againest its element indices
@@ -487,8 +738,9 @@ contains
             number_of_plots=1
         end if
 
-        !Process line spec for first data set if present
-        call process_linespec(1, pltstring(1),ls1)
+        !Process line spec and axes set for first data set if present
+        call process_linespec(1, pltstring(1), ls1, axes1)
+
 
         if (present(x2) .and. present (y2)) then
             nx2=size(x2)
@@ -500,7 +752,7 @@ contains
                 return
             end if
             !Process line spec for 2nd data set if present
-            call process_linespec(2, pltstring(2),ls2)
+            call process_linespec(2, pltstring(2), ls2, axes2)
         end if
 
         if (present(x3) .and. present (y3)) then
@@ -513,7 +765,7 @@ contains
                 return
             end if
             !Process line spec for 3rd data set if present
-            call process_linespec(3, pltstring(3),ls3)
+            call process_linespec(3, pltstring(3), ls3, axes3)
         end if
 
         if (present(x4) .and. present (y4)) then
@@ -526,14 +778,11 @@ contains
                 return
             end if
             !Process line spec for 4th data set if present
-            call process_linespec(4, pltstring(4),ls4)
+            call process_linespec(4, pltstring(4), ls4, axes4)
         end if
 
 
         call create_outputfile(this)
-
-        ! set default line style for 2D plot, can be overwritten
-        this%txtdatastyle = 'linespoints'
 
         ! Write plot title, axis labels and other annotations
         call processcmd(this)
@@ -581,10 +830,11 @@ contains
 
     subroutine  plot2d_matrix_vs_vector(this, xv,ymat, lspec)
         !..............................................................................
-        !plot2D_matrix_vs_vector accepts a vector xv and a matrix ymat and plots columns of ymat against xv
-        !lspec is an optional array defines the line specification for each data series
-        !If a single element array is sent for lspec then all series are plotted using the same
-        !linespec
+        ! plot2D_matrix_vs_vector accepts a vector xv and a matrix ymat and plots
+        ! columns of ymat against xv. lspec is an optional array defines the line
+        ! specification for each data series. If a single element array is sent for
+        ! lspec then all series are plotted using the same linespec
+        !..............................................................................
 
         implicit none
         class(gpf):: this
@@ -609,21 +859,11 @@ contains
         nx=size(xv)
         ny=size(ymat,dim=1)
         if (.not. checkdim(nx,ny)) then
-            print*, 'gpf error: The length of arrays does not match'
+            print*, md_name // ':plot2d_matrix_vs_vector:' // 'The length of arrays does not match'
             return
         end if
-        !!!!!!!!
-        !!!!!!!!        !> Rev 0.2 animation
-        !!!!!!!!
-        !!!!!!!!        if (.not. (this%hasanimation) ) then
-        !!!!!!!!            ! create the ouput file for writting gnuplot script
+        ! create the outfile to write the gnuplot script
         call create_outputfile(this)
-        !!!!!!!!        else
-        !!!!!!!!            this%frame_number = this%frame_number + 1
-        !!!!!!!!        end if
-
-        ! set default line style for 2D plot, can be overwritten
-        this%txtdatastyle = 'linespoints'
 
         ! Write titles and other annotations
         call processcmd(this)
@@ -687,8 +927,6 @@ contains
         end do
 
 
-
-
         !> Rev 0.2
         ! if there is no animation finalize
         if (.not. (this%hasanimation)) then
@@ -705,11 +943,137 @@ contains
     end subroutine  plot2d_matrix_vs_vector
 
 
+
+    subroutine  plot2d_matrix_vs_matrix(this, xmat,ymat, lspec)
+        !..............................................................................
+        ! plot2D_matrix_vs_matrix accepts a matrix xmat and a matrix ymat and plots
+        ! columns of ymat against columns of xmat. lspec is an optional array defines
+        ! the line specification for each data series. If a single element array is
+        ! sent for lspec then all series are plotted using the same linespec
+        !..............................................................................
+
+        implicit none
+        class(gpf):: this
+        ! Input arrays
+        real(wp),  intent(in)                       :: xmat(:,:)
+        real(wp),  intent(in)                       :: ymat(:,:)
+        character(len=*),  intent(in), optional     :: lspec
+        !----------------------------------------------------------------------
+        !       Local variables
+        integer:: mx, nx
+        integer:: my, ny
+        integer:: ns
+        integer:: number_of_curves
+        integer:: i
+        integer:: j
+        integer:: ierr
+        character(len=80), allocatable ::  pltstring(:), lst(:)
+        !
+
+        !*******************************************************************************
+        !   Check the input
+        ! check number of rows
+        mx=size(xmat,dim=1)
+        my=size(ymat,dim=1)
+        if (.not. checkdim(mx,my)) then
+            print*, md_name // ':plot2d_matrix_vs_matrix:' // 'The length of arrays does not match'
+            return
+        end if
+        ! check number of rows
+        nx=size(xmat,dim=2)
+        ny=size(ymat,dim=2)
+        if (.not. checkdim(nx,ny)) then
+            print*, 'gpf error: The number of columns are different, check xmat, ymat'
+            return
+        end if
+
+
+        ! create the outfile to write the gnuplot script
+        call create_outputfile(this)
+
+        ! Write titles and other annotations
+        call processcmd(this)
+
+        ! Write plot command and line styles and legend if any
+        number_of_curves=size(ymat,dim=2)
+        allocate(pltstring(number_of_curves), stat=ierr)
+        if (ierr /=0) then
+            print*, 'allocation error'
+            return
+        end if
+
+        ! assume no linespec is available
+        pltstring(1:number_of_curves) = ''
+
+        if ( present(lspec) ) then
+
+            call splitstring2array(lspec,lst,';')
+            ns = size(lst, dim=1)
+
+            if (ns == number_of_curves) then
+                ! there is a linespec for each curve
+                pltstring = lst
+            elseif (ns < number_of_curves) then
+                ! not enough linespec
+                do i=1, ns
+                    pltstring(i) = lst(i)
+                end do
+            else ! ns > number_of curves
+                print*, md_name // ': plot2d_matrix_vs_matrix:'//' wrong number of linespec'
+                print*, 'semicolon ";" acts as delimiter, check the linespec'
+            end if
+        end if
+
+        if ( present(lspec) ) then
+
+            call process_linespec(1,pltstring(1),lst(1))
+            ns=size(lst)
+            ! gpf will cylce through line specification, if number of specification passed
+            ! is less than number of plots
+            do i=1, number_of_curves
+                j=mod(i-1, ns) + 1
+                call process_linespec(i, pltstring(i), lst(j))
+            end do
+        else !No lspec is available
+            pltstring(1)=' plot "-" notitle,'
+            pltstring(2:number_of_curves-1)='"-" notitle,'
+            pltstring(number_of_curves)='"-" notitle'
+        end if
+
+        ! Write plot command and line styles and legend if any
+        write ( this%file_unit, '(a)' ) ( trim(pltstring(i)) // ' \' , i=1, number_of_curves-1)
+        write ( this%file_unit, '(a)' )   trim(pltstring(number_of_curves))
+
+        ! Write data into script file
+        do j=1, number_of_curves
+            do i = 1, mx
+                write ( this%file_unit, * ) xmat(i,j),ymat(i,j)
+            end do
+            write ( this%file_unit, '(a)' ) 'e'  !end of jth set of data
+        end do
+
+        !> Rev 0.2
+        ! if there is no animation finalize
+        if (.not. (this%hasanimation)) then
+            call finalize_plot(this)
+        else
+            write(this%file_unit, '(a, I2)') 'pause ', this%pause_seconds
+        end if
+
+        !Release memory
+        if (allocated(pltstring)) then
+            deallocate(pltstring)
+        end if
+        !: End of plot2D_matrix_vs_vector
+    end subroutine  plot2d_matrix_vs_matrix
+
+
     subroutine splot(this, x, y, z, lspec, palette)
         !..............................................................................
         ! splot create a surface plot
-        ! Rev 0.19: Feb 16, 2018
         ! datablock is used instead of  gnuplot inline file "-"
+        !..............................................................................
+
         class(gpf):: this
         ! Input vector
         real(wp),  intent(in)            :: x(:,:)
@@ -740,18 +1104,11 @@ contains
         else
             xyz_data=.false.
         end if
-        !!!!!!!!
-        !!!!!!!!        !> Rev 0.2 animation
-        !!!!!!!!
-        !!!!!!!!        if (.not. (this%hasanimation) ) then
-        !!!!!!!!            ! create the ouput file for writting gnuplot script
-        call create_outputfile(this)
-        !!!!!!!!        else
-        !!!!!!!!            this%frame_number = this%frame_number + 1
-        !!!!!!!!        end if
 
         ! set default line style for 3D plot, can be overwritten
         this%txtdatastyle = 'lines'
+        ! create the script file for writting gnuplot commands and data
+        call create_outputfile(this)
 
         ! Write titles and other annotations
         call processcmd(this)
@@ -816,6 +1173,7 @@ contains
         !..............................................................................
         !   Rev 0.19
         !   cplot creates a contour plot based on the three dimensional data
+        !..............................................................................
 
         class(gpf):: this
         ! Input vector
@@ -850,17 +1208,10 @@ contains
             xyz_data=.false.
         end if
 
-        !!!!!!        !> Rev 0.2 animation
-        !!!!!!
-        !!!!!!        if (.not. (this%hasanimation) ) then
-        !!!!!!            ! create the ouput file for writting gnuplot script
-        call create_outputfile(this)
-        !!!!!!        else
-        !!!!!!            this%frame_number = this%frame_number + 1
-        !!!!!!        end if
-
         ! set default line style for 3D plot, can be overwritten
         this%txtdatastyle = 'lines'
+        ! create the script file for writting gnuplot commands and data
+        call create_outputfile(this)
 
         ! Write titles and other annotations
         call processcmd(this)
@@ -933,8 +1284,9 @@ contains
     subroutine function_plot(this, func,xrange,np)
         !..............................................................................
         ! fplot, plot a function in the range xrange=[xmin, xamx] with np points
-        ! if np isnot sent, then np=50 is assumed!
+        ! if np is not sent, then np=50 is assumed!
         ! func is the name of function to be plotted
+        !..............................................................................
 
         class(gpf):: this
         interface
@@ -976,33 +1328,41 @@ contains
     end subroutine function_plot
 
 
-    subroutine semilogxv(this, x1, y1, ls1, &
-            x2, y2, ls2, &
-            x3, y3, ls3, &
-            x4, y4, ls4  )
+    subroutine semilogxv(this, x1, y1, ls1, axes1, &
+            x2, y2, ls2, axes2, &
+            x3, y3, ls3, axes3, &
+            x4, y4, ls4, axes4  )
         !..............................................................................
-        !   This procedure is the same as plotXY with logarithmic x axis
+        !   This procedure is the same as plotXY with logarithmic x1 and x2 axes
         !..............................................................................
+
         class(gpf):: this
         ! Input vector
-        real(wp),  intent(in)            :: x1(:)
-        real(wp),  intent(in), optional  :: y1(:)
-        character(len=*),  intent(in), optional   ::  ls1
+        real(wp),  intent(in)                          :: x1(:)  ! vector of data for x
+        real(wp),  intent(in), optional                :: y1(:)  ! vector of data for y
+        character(len=*),  intent(in), optional        :: ls1    ! line specification
+        character(len=*),  intent(in), optional        :: axes1
 
         real(wp),  intent(in), dimension(:), optional  :: x2
         real(wp),  intent(in), dimension(:), optional  :: y2
         character(len=*),  intent(in), optional        :: ls2
+        character(len=*),  intent(in), optional        :: axes2
 
         real(wp),  intent(in), dimension(:), optional  :: x3
         real(wp),  intent(in), dimension(:), optional  :: y3
         character(len=*),  intent(in), optional        :: ls3
+        character(len=*),  intent(in), optional        :: axes3
 
         real(wp),  intent(in), dimension(:), optional  :: x4
         real(wp),  intent(in), dimension(:), optional  :: y4
         character(len=*),  intent(in), optional        :: ls4
-
+        character(len=*),  intent(in), optional        :: axes4
         this%plotscale='semilogx'
-        call plot2d_vector_vs_vector(this, x1, y1, ls1, x2, y2, ls2, x3, y3, ls3, x4, y4, ls4  )
+        call plot2d_vector_vs_vector(this, &
+            x1, y1, ls1, axes1, &
+            x2, y2, ls2, axes2, &
+            x3, y3, ls3, axes3, &
+            x4, y4, ls4, axes4  )
         ! Set the plot scale as linear. It means log scale is off
         this%plotscale='linear'
 
@@ -1010,33 +1370,42 @@ contains
 
 
     !..............................................................................
-    subroutine semilogyv(this, x1, y1, ls1, &
-            x2, y2, ls2, &
-            x3, y3, ls3, &
-            x4, y4, ls4  )
+    subroutine semilogyv(this, x1, y1, ls1, axes1, &
+            x2, y2, ls2, axes2, &
+            x3, y3, ls3, axes3, &
+            x4, y4, ls4,axes4  )
         !..............................................................................
-        !   This procedure is the same as plotXY with logarithmic y axis
+        !   This procedure is the same as plotXY with logarithmic y1 and y2 axes
         !..............................................................................
+
         class(gpf):: this
         ! Input vector
-        real(wp),  intent(in)                       :: x1(:)
-        real(wp),  intent(in), optional             :: y1(:)
-        character(len=*),  intent(in), optional     :: ls1
+        real(wp),  intent(in)                          :: x1(:)  ! vector of data for x
+        real(wp),  intent(in), optional                :: y1(:)  ! vector of data for y
+        character(len=*),  intent(in), optional        :: ls1    ! line specification
+        character(len=*),  intent(in), optional        :: axes1
 
-        real(wp),  intent(in), dimension(:), optional   :: x2
-        real(wp),  intent(in), dimension(:), optional   :: y2
-        character(len=*),  intent(in), optional         :: ls2
+        real(wp),  intent(in), dimension(:), optional  :: x2
+        real(wp),  intent(in), dimension(:), optional  :: y2
+        character(len=*),  intent(in), optional        :: ls2
+        character(len=*),  intent(in), optional        :: axes2
 
-        real(wp),  intent(in), dimension(:), optional   :: x3
-        real(wp),  intent(in), dimension(:), optional   :: y3
-        character(len=*),  intent(in), optional         :: ls3
+        real(wp),  intent(in), dimension(:), optional  :: x3
+        real(wp),  intent(in), dimension(:), optional  :: y3
+        character(len=*),  intent(in), optional        :: ls3
+        character(len=*),  intent(in), optional        :: axes3
 
-        real(wp),  intent(in), dimension(:), optional   :: x4
-        real(wp),  intent(in), dimension(:), optional   :: y4
-        character(len=*),  intent(in), optional         :: ls4
+        real(wp),  intent(in), dimension(:), optional  :: x4
+        real(wp),  intent(in), dimension(:), optional  :: y4
+        character(len=*),  intent(in), optional        :: ls4
+        character(len=*),  intent(in), optional        :: axes4
 
         this%plotscale='semilogy'
-        call plot2d_vector_vs_vector(this, x1, y1, ls1, x2, y2, ls2, x3, y3, ls3, x4, y4, ls4  )
+        call plot2d_vector_vs_vector(this, &
+            x1, y1, ls1, axes1, &
+            x2, y2, ls2, axes2, &
+            x3, y3, ls3, axes3, &
+            x4, y4, ls4, axes4  )
         ! Set the plot scale as linear. It means log scale is off
         this%plotscale='linear'
 
@@ -1045,33 +1414,43 @@ contains
 
 
 
-    subroutine loglogv(this, x1, y1, ls1, &
-            x2, y2, ls2, &
-            x3, y3, ls3, &
-            x4, y4, ls4  )
+    subroutine loglogv(this, x1, y1, ls1, axes1, &
+            x2, y2, ls2, axes2, &
+            x3, y3, ls3, axes3, &
+            x4, y4, ls4, axes4  )
         !..............................................................................
-        !   This procedure is the same as plotXY with logarithmic xy axis
+        !   This procedure is the same as plotXY with logarithmic x1, y1, x2, y2 axes
         !..............................................................................
+
         class(gpf):: this
         ! Input vector
-        real(wp),  intent(in)            :: x1(:)
-        real(wp),  intent(in), optional  :: y1(:)
-        character(len=*),  intent(in), optional   ::  ls1
+        real(wp),  intent(in)                          :: x1(:)  ! vector of data for x
+        real(wp),  intent(in), optional                :: y1(:)  ! vector of data for y
+        character(len=*),  intent(in), optional        :: ls1    ! line specification
+        character(len=*),  intent(in), optional        :: axes1
 
         real(wp),  intent(in), dimension(:), optional  :: x2
         real(wp),  intent(in), dimension(:), optional  :: y2
-        character(len=*),  intent(in), optional       :: ls2
+        character(len=*),  intent(in), optional        :: ls2
+        character(len=*),  intent(in), optional        :: axes2
 
         real(wp),  intent(in), dimension(:), optional  :: x3
         real(wp),  intent(in), dimension(:), optional  :: y3
-        character(len=*),  intent(in), optional       :: ls3
+        character(len=*),  intent(in), optional        :: ls3
+        character(len=*),  intent(in), optional        :: axes3
 
         real(wp),  intent(in), dimension(:), optional  :: x4
         real(wp),  intent(in), dimension(:), optional  :: y4
-        character(len=*),  intent(in), optional   ::  ls4
+        character(len=*),  intent(in), optional        :: ls4
+        character(len=*),  intent(in), optional        :: axes4
+
 
         this%plotscale='loglog'
-        call plot2d_vector_vs_vector(this, x1, y1, ls1, x2, y2, ls2, x3, y3, ls3, x4, y4, ls4  )
+        call plot2d_vector_vs_vector(this, &
+            x1, y1, ls1, axes1, &
+            x2, y2, ls2, axes2, &
+            x3, y3, ls3, axes3, &
+            x4, y4, ls4, axes4  )
         ! Set the plot scale as linear. It means log scale is off
         this%plotscale='linear'
 
@@ -1079,7 +1458,7 @@ contains
 
 
 
-    subroutine  semilogxm(this, xv,ymat, lspec)
+    subroutine  semilogxm(this, xv, ymat, lspec)
         !..............................................................................
         !Plots a matrix against a vector with logarithmic x-axis
         !For more information see plot2D_matrix_vs_vector procedure
@@ -1087,10 +1466,10 @@ contains
         !..............................................................................
 
         implicit none
-        class(gpf):: this
+        class(gpf)                                :: this
         ! Input arrays
-        real(wp),  intent(in)    :: xv(:)
-        real(wp),  intent(in)    :: ymat(:,:)
+        real(wp),  intent(in)                     :: xv(:)
+        real(wp),  intent(in)                     :: ymat(:,:)
         character(len=*),  intent(in), optional   :: lspec
 
         this%plotscale='semilogx'
@@ -1111,7 +1490,7 @@ contains
         !..............................................................................
 
         implicit none
-        class(gpf):: this
+        class(gpf)                                  :: this
         ! Input arrays
         real(wp),  intent(in)                       :: xv(:)
         real(wp),  intent(in)                       :: ymat(:,:)
@@ -1134,10 +1513,10 @@ contains
         !..............................................................................
 
         implicit none
-        class(gpf):: this
+        class(gpf)                                :: this
         ! Input arrays
-        real(wp),  intent(in)    :: xv(:)
-        real(wp),  intent(in)    :: ymat(:,:)
+        real(wp),  intent(in)                     :: xv(:)
+        real(wp),  intent(in)                     :: ymat(:,:)
         character(len=*),  intent(in), optional   :: lspec
 
         this%plotscale='loglog'
@@ -1155,13 +1534,13 @@ contains
     !!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-    subroutine sub_animation_start(this, delay)
+    subroutine sub_animation_start(this, pause_seconds)
         !-------------------------------------------------------------------------------
         ! sub_animation_start: set the setting to start an animation
         ! it simply set flags and open a script file to write data
         !-------------------------------------------------------------------------------
-        class(gpf) :: this
-        integer, intent(in), optional :: delay
+        class(gpf)                    :: this
+        integer, intent(in), optional :: pause_seconds
 
 
         ! ogpf does not support multiplot with animation at the same time
@@ -1171,8 +1550,8 @@ contains
         end if
 
 
-        if (present(delay)) then
-            this%pause_seconds = delay
+        if (present(pause_seconds)) then
+            this%pause_seconds = pause_seconds
         else
             this%pause_seconds = 2  ! delay in second
         end if
@@ -1194,6 +1573,7 @@ contains
         !-------------------------------------------------------------------------------
 
         class(gpf) :: this
+
         this%frame_number = 0
         this%hasanimation = .false.
 
@@ -1215,10 +1595,8 @@ contains
         ! in global txtscript to be later sent to gnuplot
         !..............................................................................
 
-        class(gpf):: this
+        class(gpf)                   :: this
         character(len=*), intent(in) :: strcmd
-        ! Integer, Save :: strlength=0
-        ! strlength=strlength+len_trim(stropt)
 
         if (len_trim(this%txtscript) == 0 ) then
             this%txtscript = '' ! initialize string
@@ -1242,8 +1620,6 @@ contains
         !REV 0.18: a dedicated subroutine is used to create the output file
         call create_outputfile(this)
 
-        ! set default line style, can be overwritten
-        this%txtdatastyle = 'linespoints'
         !write the script
         call processcmd(this)
         write(unit=this%file_unit, fmt='(a)') this%txtscript
@@ -1255,14 +1631,48 @@ contains
 
 
 
-
-
     !!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     !!> Section Five: gnuplot command processing and data writing to script file
     !!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    subroutine process_axes_set(axes_set, axes)
+        !..............................................................................
+        ! process_axesspec accepts the axes set and interpret it into
+        ! a format to be sent to gnuplot.
+        ! the axes set can be one of the following set
+        ! x1y1, x1y2, x2y1, x2y2
+        !..............................................................................
 
-    subroutine process_linespec(order, lsstring, lspec)
+        character(len=*), intent(in)  :: axes_set
+        character(len=4), intent(out) :: axes
+
+
+        if (len_trim (adjustl(axes_set)) == 0) then
+            axes=''
+            return
+        end if
+
+        select case ( lcase(trim (adjustl (axes_set) ) ) )
+            case ('x1y1')
+                axes='x1y1'
+            case ('x1y2')
+                axes='x1y2'
+            case ('x2y1')
+                axes='x2y1'
+            case ('x2y2')
+                axes='x2y2'
+            case default ! wrong strings
+                print*, md_name // ':process_axes_set:' // ' wrong axes set is sent.'// new_line(' ') &
+                    // 'axes set can be on of: x1y1, x1y2, x2y1, x2y2'
+                axes=''
+                return
+        end select
+
+    end subroutine process_axes_set
+
+
+
+    subroutine process_linespec(order, lsstring, lspec, axes_set)
         !..............................................................................
         ! process_linespec accepts the line specification and interpret it into
         ! a format to be sent to gnuplot
@@ -1271,27 +1681,41 @@ contains
         integer, intent(in) :: order !1 for the first data series
         character(len=*), intent(out) :: lsstring
         character(len=*), intent(in), optional :: lspec
+        character(len=*), intent(in), optional :: axes_set
+
+        !local variables
+        character(len=4)  :: axes
+        character(len=10) :: axes_setting
+
+        !check the axes set
+        axes_setting = ''
+        if ( present (axes_set)) then
+            call process_axes_set(axes_set, axes)
+            if (len(trim(axes))> 0 ) then
+                axes_setting = ' axes ' // axes
+            end if
+        end if
 
         select case(order)
             case(1)
                 if ( present(lspec) ) then
                     if (hastitle(lspec)) then
-                        lsstring='plot "-" '//trim(lspec)
+                        lsstring='plot "-" '//trim(lspec) // axes_setting
                     else
-                        lsstring='plot "-" notitle '//trim(lspec)
+                        lsstring='plot "-" notitle '//trim(lspec) // axes_setting
                     end if
                 else
-                    lsstring='plot "-" notitle '
+                    lsstring='plot "-" notitle' // axes_setting
                 end if
             case  default !e.g. 2, 3, 4, ...
                 if (present(lspec)) then
                     if (hastitle(lspec)) then
-                        lsstring=', "-" '// trim(lspec)
+                        lsstring=', "-" '// trim(lspec) // axes_setting
                     else
-                        lsstring=', "-" notitle '// trim(lspec)
+                        lsstring=', "-" notitle '// trim(lspec) // axes_setting
                     end if
                 else
-                    lsstring=', "-" notitle '
+                    lsstring=', "-" notitle' // axes_setting
                 end if
         end select
     end subroutine process_linespec
@@ -1304,32 +1728,27 @@ contains
         !   to be read by gnuplot
         !..............................................................................
 
-        class(gpf)              :: this
+        class(gpf) :: this
 
+        ! write the plot style for data
+        ! this is used only when 3D plots (splot, cplot) is used
+        if (allocated(this%txtdatastyle)) then
+            write ( this%file_unit, '(a)' ) 'set style data '//this%txtdatastyle  !set data style
+            write ( this%file_unit, '(a)' )  ! emptyline
+        end if
 
-        ! The following lines set the gnuplot terminal
-        ! The data style to lines+symbols:linespoints
-        ! Can be overwritten by options
-
-        ! write signature
-        write ( this%file_unit, '(a)' ) '# ' // md_name
-        write ( this%file_unit, '(a)' ) '# ' // md_rev
-        write ( this%file_unit, '(a)' ) '# ' // md_lic
-        write ( this%file_unit, '(a)' )  ! emptyline
-
-        ! write the global settings
-        write ( this%file_unit, '(a)' ) '# gnuplot global setting'
-        write ( this%file_unit, '(a)' ) 'set style data '//this%txtdatastyle  !set data style
-        write ( this%file_unit, '(a)' )  ! emptyline
 
         ! Write options
         if ( this%hasoptions ) then
+            write( unit = this%file_unit, fmt= '(a)') ' '
             write( unit = this%file_unit, fmt= '(a)') '# options'
             write( unit = this%file_unit, fmt= '(a)') this%txtoptions
             write ( this%file_unit, '(a)' )  ! emptyline
         end if
 
         ! Check with plot scale: i.e linear, logx, logy, or log xy
+        write( unit = this%file_unit, fmt= '(a)') ' '
+        write( unit = this%file_unit, fmt= '(a)') '# plot scale'
         select case (this%plotscale)
             case ('semilogx')
                 write ( this%file_unit, '(a)' ) 'set logscale  x'
@@ -1337,42 +1756,133 @@ contains
                 write ( this%file_unit, '(a)' ) 'set logscale  y'
             case ('loglog')
                 write ( this%file_unit, '(a)' ) 'set logscale  xy'
-            case default !For linear xy plot or 3D plots
+            case default !for no setting
                 !pass
         end select
 
+        !!>0.22
+        ! write annotation
+        write( unit = this%file_unit, fmt= '(a)') ' '
+        write( unit = this%file_unit, fmt= '(a)') '# Annotation: title and labels'
+        call write_label(this, 'plot_title')
+        call write_label(this, 'xlabel'    )
+        call write_label(this, 'x2label'   )
+        call write_label(this, 'ylabel'    )
+        call write_label(this, 'y2label'   )
+        call write_label(this, 'zlabel'    )
 
+        ! axes range
+        write( unit = this%file_unit, fmt= '(a)') ' '
         write( unit = this%file_unit, fmt= '(a)') '# axes setting'
         if (this%hasxrange) then
             write ( this%file_unit, '(a,f0.0,a,f0.0,a)' ) 'set xrange [',this%xrange(1),':',this%xrange(2),']'
         end if
-
         if (this%hasyrange) then
             write ( this%file_unit, '(a,f0.0,a,f0.0,a)' ) 'set yrange [',this%yrange(1),':',this%yrange(2),']'
         end if
-
         if (this%haszrange) then
             write ( this%file_unit, '(a,f0.0,a,f0.0,a)' ) 'set zrange [',this%zrange(1),':',this%zrange(2),']'
         end if
 
-
-        write( unit = this%file_unit, fmt= '(a)') '# plot annotation'
-        if (this%hasplottitle) then
-            write ( this%file_unit, '(a)' ) 'set title  "' // trim(this%txtplottitle)// '"'
+        ! secondary axes range
+        if (this%hasx2range) then
+            write ( this%file_unit, '(a,f0.0,a,f0.0,a)' ) 'set x2range [',this%x2range(1),':',this%x2range(2),']'
         end if
-        if (this%hasxlabel) then
-            write ( this%file_unit, '(a)' ) 'set xlabel "'// trim(this%txtxlabel)//'"'
+        if (this%hasy2range) then
+            write ( this%file_unit, '(a,f0.0,a,f0.0,a)' ) 'set y2range [',this%y2range(1),':',this%y2range(2),']'
         end if
-        if (this%hasylabel) then
-            write ( this%file_unit, '(a)' ) 'set ylabel "'//trim(this%txtylabel)//'"'
-        end if
-        if (this%haszlabel) then
-            write ( this%file_unit, '(a)' ) 'set zlabel "'//trim(this%txtzlabel)//'"'
-        end if
+        ! finish by new line
         write ( this%file_unit, '(a)' )  ! emptyline
 
     end subroutine processcmd
 
+
+
+    subroutine write_label(this, lblname)
+        !..............................................................................
+        !   This subroutine writes the labels into plot file
+        !   to be read by gnuplot
+        !..............................................................................
+
+
+        ! write_label
+        class(gpf)                    :: this
+        character(len=*)              :: lblname
+
+        ! local var
+        character(len=:), allocatable :: lblstring
+        character(len=:), allocatable :: lblset
+        type(tplabel)                 :: label
+
+        select case (lblname)
+            case ('xlabel')
+                if (.not. (this%tpxlabel%has_label) ) then
+                    return ! there is no label
+                end if
+                lblset = 'set xlabel "'
+                label = this%tpxlabel
+            case ('x2label')
+                if (.not. (this%tpx2label%has_label) ) then
+                    return ! there is no label
+                end if
+                lblset = 'set x2label "'
+                label = this%tpx2label
+            case ('ylabel')
+                if (.not. (this%tpylabel%has_label) ) then
+                    return ! there is no label
+                end if
+                lblset = 'set ylabel "'
+                label = this%tpylabel
+            case ('y2label')
+                if (.not. (this%tpy2label%has_label) ) then
+                    return ! there is no label
+                end if
+                lblset = 'set y2label "'
+                label = this%tpy2label
+            case ('zlabel')
+                if (.not. (this%tpzlabel%has_label) ) then
+                    return ! there is no label
+                end if
+                lblset = 'set zlabel "'
+                label = this%tpzlabel
+            case ('plot_title')
+                if (.not. (this%tpplottitle%has_label) ) then
+                    return ! there is no label
+                end if
+                lblset = 'set title "'
+                label = this%tpplottitle
+        end select
+
+        lblstring = ''
+        ! if there is a label continue to set it
+        lblstring                  = lblstring // lblset // trim(label%lbltext)//'"'
+        if (allocated(label%lblcolor)) then
+            lblstring              = lblstring // ' tc "' //trim(label%lblcolor) // '"'
+        end if
+        ! set font and size
+        if (allocated(this%tpxlabel%lblfontname)) then
+            lblstring              = lblstring // ' font "'// trim(label%lblfontname) // ','
+            if (label%lblfontsize /= NOT_INITIALIZED) then
+                lblstring          = lblstring // num2str(label%lblfontsize) //'"'
+            else
+                lblstring          = lblstring //'"'
+            end if
+        else ! check if only font size has been given
+            if (label%lblfontsize /= NOT_INITIALIZED ) then
+                lblstring          = lblstring // ' font ",' // num2str(label%lblfontsize) //'"'
+            end if
+        end if
+        ! set rotation
+        if (label%lblrotate       /= NOT_INITIALIZED ) then
+            lblstring              = lblstring // ' rotate by ' // num2str(label%lblrotate )
+        end if
+
+
+        ! write to ogpf script file
+        write ( this%file_unit, '(a)' ) lblstring
+
+
+    end subroutine write_label
 
 
 
@@ -1387,14 +1897,14 @@ contains
         character(len=:), allocatable :: str
 
         ! local variables
-        character(len=1)  :: strnum
-        character(len=11) :: strblank
-        integer :: j
-        integer :: maxcolors
+        character(len=1)              :: strnumber
+        character(len=11)             :: strblank
+        integer                       :: j
+        integer                       :: maxcolors
 
         ! define the color palettes
         character(len=:), allocatable :: pltname
-        character(len=7) :: palette(9) ! palettes with maximum 9 colors
+        character(len=7)              :: palette(9) ! palettes with maximum 9 colors
 
         maxcolors = 8 ! default number of discrete colors
         palette=''
@@ -1454,17 +1964,17 @@ contains
         end select
 
         ! generate the gnuplot palette as a single multiline string
-        str      = '# Define the ' // pltname // ' pallete' // new_line(' ')
-        str      = str // 'set palette defined ( \' // new_line(' ')
-        strblank = '           '
+        str                 = '# Define the ' // pltname // ' pallete' // new_line(' ')
+        str                 = str // 'set palette defined ( \' // new_line(' ')
+        strblank            = '           ' ! pad certain number of paces
         do j=1, maxcolors - 1
-            write(unit=strnum, fmt='(I1)' ) j-1
-            str = str // strblank // strnum // ' "' // palette(j) // '",\' // new_line(' ')
+            write(unit      =strnumber, fmt='(I1)' ) j-1
+            str             = str // strblank // strnumber // ' "' // palette(j) // '",\' // new_line(' ')
         end do
 
-        j=maxcolors
-        write(strnum, fmt='(I1)') j
-        str = str // strblank // strnum // ' "' // palette(j) // '" )' // new_line(' ')
+        j                   =maxcolors
+        write(strnumber, fmt='(I1)') j
+        str                 = str // strblank // strnumber // ' "' // palette(j) // '" )' // new_line(' ')
 
     end function color_palettes
 
@@ -1495,6 +2005,7 @@ contains
             end do
         end if
         write ( file_unit, '(a)' ) 'e'  !end of set of data
+
     end subroutine write_xydata
 
 
@@ -1508,40 +2019,54 @@ contains
         ! Rev 0.18
         class(gpf), intent(inout)   :: this
 
-        !************************************************************************
-        !************************************************************************
         if (this%hasfileopen) then
-            ! there is nothing to do
+            ! there is nothing to do, file has been already open!
             return
         end if
-
 
         !> Rev 0.2 animation
 
         ! animation handling
         if (this%hasanimation ) then
-            this%frame_number = this%frame_number + 1
+            this%frame_number = this%frame_number + 1 ! for future use
         end if
 
-
-        !**********************************************************************
-        !**********************************************************************
-        !**********************************************************************
-        !**********************************************************************
-
         ! Open the output file
+
+        if (.not. (this%hasfilename)) then ! check if no file has been set by user
+            this%txtfilename=gnuplot_output_filename
+        end if
+
         open ( newunit = this%file_unit, file = this%txtfilename, status = 'replace', iostat = this%status )
+
 
         if (this%status /= 0 ) then
             print*, "md_helperproc, create_outputfile: cannot open file for output"
             stop
         end if
 
-        ! write the general setting
+
+        ! Set the gnuplot terminal, write ogpf configuration (customized setting)
+        ! Can be overwritten by options
+
+        ! write signature
+        write ( this%file_unit, '(a)' ) '# ' // md_name
+        write ( this%file_unit, '(a)' ) '# ' // md_rev
+        write ( this%file_unit, '(a)' ) '# ' // md_lic
+        write ( this%file_unit, '(a)' )  ! emptyline
+
+        ! write the global settings
+        write ( this%file_unit, '(a)' ) '# gnuplot global setting'
         write(unit=this%file_unit, fmt='(a)') 'set term ' // gnuplot_term_type // &
             ' size ' // gnuplot_term_size // ' enhanced font "' // &
-            gnuplot_term_font // '"'
+            gnuplot_term_font // '"' // &
+            ' title "' // md_name // ': ' // md_rev //'"'   ! library name and version
 
+        ! write the preset configuration for gnuplot (ogpf customized settings)
+        if (this%preset_configuration) then
+            call this%preset_gnuplot_config()
+        end if
+        ! write multiplot setting
         if (this%hasmultiplot) then
             write(this%file_unit, fmt='(a, I2, a, I2)') 'set multiplot layout ', &
                 this%multiplot_rows, ',',  this%multiplot_cols
@@ -1552,9 +2077,54 @@ contains
     end subroutine create_outputfile
 
 
+    subroutine preset_gnuplot_config(this)
+        !..............................................................................
+        ! To write the preset configuration for gnuplot (ogpf customized settings)
+        !..............................................................................
+        class(gpf) :: this
+
+        write(this%file_unit, fmt='(a)')
+        write(this%file_unit, fmt='(a)') '# ogpf extra configuration'
+        write(this%file_unit, fmt='(a)') '# -------------------------------------------'
+
+
+        ! color definition
+        write(this%file_unit, fmt='(a)') '# color definitions'
+        write(this%file_unit, fmt='(a)') 'set style line 1 lc rgb "#800000" lt 1 lw 2'
+        write(this%file_unit, fmt='(a)') 'set style line 2 lc rgb "#ff0000" lt 1 lw 2'
+        write(this%file_unit, fmt='(a)') 'set style line 3 lc rgb "#ff4500" lt 1 lw 2'
+        write(this%file_unit, fmt='(a)') 'set style line 4 lc rgb "#ffa500" lt 1 lw 2'
+        write(this%file_unit, fmt='(a)') 'set style line 5 lc rgb "#006400" lt 1 lw 2'
+        write(this%file_unit, fmt='(a)') 'set style line 6 lc rgb "#0000ff" lt 1 lw 2'
+        write(this%file_unit, fmt='(a)') 'set style line 7 lc rgb "#9400d3" lt 1 lw 2'
+        write(this%file_unit, fmt='(a)')
+        ! axes setting
+        write(this%file_unit, fmt='(a)') '# Axes'
+        write(this%file_unit, fmt='(a)') 'set border linewidth 1.15'
+        write(this%file_unit, fmt='(a)') 'set tics nomirror'
+        write(this%file_unit, fmt='(a)')
+
+        write(this%file_unit, fmt='(a)') '# grid'
+        write(this%file_unit, fmt='(a)') '# Add light grid to plot'
+        write(this%file_unit, fmt='(a)') 'set style line 102 lc rgb "#d6d7d9" lt 0 lw 1'
+        write(this%file_unit, fmt='(a)') 'set grid back ls 102'
+        write(this%file_unit, fmt='(a)')
+        ! set the plot style
+        write(this%file_unit, fmt='(a)') '# plot style'
+        write(this%file_unit, fmt='(a)') 'set style data linespoints'
+        write(this%file_unit, fmt='(a)')
+
+        write(this%file_unit, fmt='(a)') '# -------------------------------------------'
+        write(this%file_unit, fmt='(a)') ''
+
+
+    end subroutine preset_gnuplot_config
+
+
+
     subroutine finalize_plot(this)
         !..............................................................................
-        ! To finalize the writing of gnuplot commands and close the output file.
+        ! To finalize the writing of gnuplot commands/data and close the output file.
         !..............................................................................
         class(gpf) :: this
 
@@ -1573,16 +2143,11 @@ contains
             end if
         end if
 
-        ! check for the animation
-
-
-
-        close ( unit = this%file_unit )     ! close the script file
-        this%hasfileopen = .false.          ! reset file open flag
+        close ( unit = this%file_unit )   ! close the script file
+        this%hasfileopen = .false.        ! reset file open flag
         this%hasanimation = .false.
-        call execute_command_line ('gnuplot -persist '//this%txtfilename)  !   Now plot the results
-
-
+        ! Use shell command to run gnuplot
+        call execute_command_line ('gnuplot -persist ' // this%txtfilename)  !   Now plot the results
 
     end subroutine finalize_plot
 
@@ -1639,7 +2204,6 @@ contains
 
 
 
-
     pure function splitstr(str) result(spstr)
         !..............................................................................
         !splitstr, separate a string using ";" delimiters
@@ -1680,13 +2244,14 @@ contains
 
 
     subroutine splitstring2array(strin, strarray, delimiter)
+        !..............................................................................
         ! splitstring splits a string to an array of
         ! substrings based on a selected delimiter
         ! note:
         !    a. any facing space/blank in substrings will be removed
         !    b. two adjacent delimiter treats as an empty substring between them
         !    c. facing and trailing delimiter treats as empty substring at the fornt and end
-
+        !..............................................................................
 
         character(len=*),  intent(in)               :: strin
         character(len=80), allocatable, intent(out) :: strarray(:)
@@ -1704,7 +2269,6 @@ contains
         else
             delimiter_ = ';'
         end if
-
 
         ! 1. remove initial blanks if any
         strtmp=trim (adjustl(strin) )
@@ -1751,6 +2315,68 @@ contains
     end function lcase
 
 
+    function num2str_i4(number_in)
+        !..............................................................................
+        ! num2str_int: converts integer number to string
+        !..............................................................................
+
+        integer(kind=4), intent(in)     :: number_in
+        character(len=:), allocatable   :: num2str_i4
+
+        ! local variable
+        character(len=range(number_in)) :: strnm
+        write(unit=strnm, fmt='(I0)') number_in
+        num2str_i4 = trim(strnm)
+
+    end function num2str_i4
+
+    function num2str_r4(number_in, strfmt)
+        !..............................................................................
+        ! num2str_r4: converts single precision real number to string
+        ! strfmt is the optional format string
+        !..............................................................................
+
+        real(kind=4), intent(in)                :: number_in
+        character(len=*), intent(in), optional  :: strfmt
+        character(len=:), allocatable           :: num2str_r4
+
+        ! local variable
+        character(len=range(number_in)) :: strnm
+
+
+        if (present(strfmt)) then
+            write(unit=strnm, fmt= '('//trim(strfmt)//')' ) number_in
+        else
+            write(unit=strnm, fmt='(G0)') number_in
+        end if
+
+        num2str_r4 = trim(strnm)
+
+    end function num2str_r4
+
+
+    function num2str_r8(number_in, strfmt)
+        !..............................................................................
+        ! num2str_real: converts double precision real number to string
+        ! strfmt is the optional format string
+        !..............................................................................
+
+        real(kind=8), intent(in)                :: number_in
+        character(len=*), intent(in), optional  :: strfmt
+        character(len=:), allocatable           :: num2str_r8
+
+        ! local variable
+        character(len=range(number_in)) :: strnm
+
+        if (present(strfmt)) then
+            write(unit=strnm, fmt= '('//trim(strfmt)//')' ) number_in
+        else
+            write(unit=strnm, fmt='(G0)') number_in
+        end if
+
+        num2str_r8 = trim(strnm)
+
+    end function num2str_r8
 
 
     !!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
