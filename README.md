@@ -1,6 +1,20 @@
 # ogpf
 Object Based Interface to GnuPlot from Fortran (ogpf)
 
+## 2D Plots
+
+Simple plot                    | Animation
+:-----------------------------:|:------------------------------------:
+![Example 04](doc/exmp04.png)  | ![Example 09](doc/exmp09.gif)
+
+## 3D Plots
+
+Surface                        | Contour
+:-----------------------------:|:------------------------------------:
+![Example 04](doc/exmp105.png) | ![Example 09](doc/exmp105_2.png)
+
+
+
 ### GnuPlot Interface
 
 	Purpose:   Object Based Interface to GnuPlot from Fortran (ogpf)
@@ -191,8 +205,8 @@ Plot several data series at the same time
 ```
 Will produce
 
-![Example 05](doc/exmp04.png)
-![Example 05](doc/exmp04_2.png)
+![Example 04](doc/exmp04.png)
+![Example 04](doc/exmp04_2.png)
 
 
 
