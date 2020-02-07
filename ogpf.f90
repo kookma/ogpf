@@ -292,7 +292,7 @@ module ogpf
         generic, public         :: loglog     => loglogv, loglogm
 
         procedure, pass, public :: surf       => splot  ! 3D surface plot
-        procedure, pass, public :: lplot      => lplot  ! 3D line plot
+        procedure, pass, public :: lplot      => lplot3d  ! 3D line plot
         procedure, pass, public :: contour    => cplot  ! contour plot
 
         procedure, pass, public :: fplot      => function_plot
