@@ -1474,7 +1474,7 @@ contains
     call gp%options('unset tics')   ! turn off axes values (tics)
     call gp%options('set view map') ! set viewpoint top down
     ! plot using linespec
-    call gp%surf(x,y,z,lspec='w lp ps 2 pt 6 lc ""')
+    call gp%surf(x,y,z,lspec='w lp ps 2 pt 6 lc "#99aa33')
 
     end subroutine exmp108
 
