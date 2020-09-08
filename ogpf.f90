@@ -292,6 +292,7 @@ module ogpf
         generic, public         :: loglog     => loglogv, loglogm
 
         procedure, pass, public :: surf       => splot  ! 3D surface plot
+        procedure, pass, public :: lplot      => lplot3d  ! 3D line plot
         procedure, pass, public :: contour    => cplot  ! contour plot
 
         procedure, pass, public :: fplot      => function_plot
@@ -1285,6 +1286,100 @@ contains
         !: End of cplot
     end subroutine cplot
 
+     subroutine lplot3d(this, x, y, z, lspec, palette)
+         !..............................................................................
+         ! lplot3d create a line plot in 3d
+         ! datablock is used instead of  gnuplot inline file "-"
+         !..............................................................................
+ 
+         class(gpf):: this
+         ! Input vector
+         real(wp),  intent(in)            :: x(:)
+         real(wp),  intent(in), optional  :: y(:)
+         real(wp),  intent(in), optional  :: z(:)
+         character(len=*),  intent(in), optional   ::  lspec
+         character(len=*),  intent(in), optional   ::  palette
+ 
+         !   Local variables
+         !----------------------------------------------------------------------
+         integer:: ncx
+         integer:: nrx
+         integer:: i
+         integer:: j
+         logical:: xyz_data
+         character(len=80)::  pltstring
+         character(len=*), parameter ::  datablock = '$xyz'
+ 
+         pltstring=''
+         !   Check the input data
+         nrx=size(x)
+         if (present(y) .and. present(z)) then
+             xyz_data=.true.
+         elseif (present(y)) then
+             print*, "gpf error: Z matrix was not sent to 3D plot routine"
+             return
+         else
+             xyz_data=.false.
+         end if
+ 
+         ! set default line style for 3D plot, can be overwritten
+         this%txtdatastyle = 'lines'
+         ! create the script file for writing gnuplot commands and data
+         call create_outputfile(this)
+ 
+         ! Write titles and other annotations
+         call processcmd(this)
+ 
+         ! Write xy data into file
+         write ( this%file_unit, '(a)' ) '#data x y z'
+         ! Rev 0.20
+         ! write the $xyz datablocks
+         write( this%file_unit, '(a)' )  datablock // ' << EOD'
+         if (xyz_data) then
+             do i=1, nrx
+                 write ( this%file_unit, * ) x(i), y(i), z(i)
+             enddo
+             write( this%file_unit, '(a)' )  !put an empty line
+             write ( this%file_unit, '(a)' ) 'EOD'  !end of datablock
+         else !only Z has been sent (i.e. single matrix data)
+             do i=1, nrx
+                 write ( this%file_unit, * ) i, x(i)
+             enddo
+             write( this%file_unit, '(a)' )  !put an empty line
+             write ( this%file_unit, '(a)' ) 'EOD'  !end of datablock
+         end if
+ 
+ 
+         !write the color palette into gnuplot script file
+         if (present(palette)) then
+             write ( this%file_unit, '(a)' )  color_palettes(palette)
+             write ( this%file_unit, '(a)' )  'set pm3d' ! a conflict with lspec
+         end if
+ 
+ 
+         if ( present(lspec) ) then
+             if (hastitle(lspec)) then
+                 pltstring='splot ' // datablock // ' ' // trim(lspec) // 'with lines'
+             else
+                 pltstring='splot ' // datablock // ' notitle '//trim(lspec) // 'with lines'
+             end if
+         else
+             pltstring='splot ' // datablock // ' notitle with lines'
+         end if
+ 
+         write ( this%file_unit, '(a)' ) trim(pltstring)
+ 
+ 
+         !> Rev 0.2: animation
+         ! if there is no animation finalize
+         if (.not. (this%hasanimation)) then
+             call finalize_plot(this)
+         else
+             write(this%file_unit, '(a, I2)') 'pause ', this%pause_seconds
+         end if
+ 
+         !: End of lplot3d
+     end subroutine lplot3d
 
     subroutine function_plot(this, func,xrange,np)
         !..............................................................................
