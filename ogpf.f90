@@ -1739,37 +1739,37 @@ contains
         ! write the plot style for data
         ! this is used only when 3D plots (splot, cplot) is used
         if (allocated(this%txtdatastyle)) then
-            write ( this%file_unit, '(a)' ) 'set style data '//this%txtdatastyle  !set data style
-            write ( this%file_unit, '(a)' )  ! emptyline
+            write ( this%file_unit, '("set style data ", a)' ) this%txtdatastyle
+            write ( this%file_unit, '(a)' )
         end if
 
 
         ! Write options
         if ( this%hasoptions ) then
-            write( unit = this%file_unit, fmt= '(a)') ' '
-            write( unit = this%file_unit, fmt= '(a)') '# options'
-            write( unit = this%file_unit, fmt= '(a)') this%txtoptions
-            write ( this%file_unit, '(a)' )  ! emptyline
+            write ( this%file_unit, '(" ")' )
+            write ( this%file_unit, '("# options")' )
+            write ( this%file_unit, '(a)' ) this%txtoptions
+            write ( this%file_unit, '(a)' )
         end if
 
         ! Check with plot scale: i.e linear, logx, logy, or log xy
-        write( unit = this%file_unit, fmt= '(a)') ' '
-        write( unit = this%file_unit, fmt= '(a)') '# plot scale'
+        write( this%file_unit, '(" ")' )
+        write( this%file_unit, '("# plot scale")' )
         select case (this%plotscale)
             case ('semilogx')
-                write ( this%file_unit, '(a)' ) 'set logscale  x'
+                write ( this%file_unit, '("set logscale  x")' )
             case ('semilogy')
-                write ( this%file_unit, '(a)' ) 'set logscale  y'
+                write ( this%file_unit, '("set logscale  y")' )
             case ('loglog')
-                write ( this%file_unit, '(a)' ) 'set logscale  xy'
+                write ( this%file_unit, '("set logscale  xy")' )
             case default !for no setting
                 !pass
         end select
 
         !!>0.22
         ! write annotation
-        write( unit = this%file_unit, fmt= '(a)') ' '
-        write( unit = this%file_unit, fmt= '(a)') '# Annotation: title and labels'
+        write ( this%file_unit, '(" ")' )
+        write ( this%file_unit, '("# Annotation: title and labels")' )
         call write_label(this, 'plot_title')
         call write_label(this, 'xlabel'    )
         call write_label(this, 'x2label'   )
@@ -1778,27 +1778,27 @@ contains
         call write_label(this, 'zlabel'    )
 
         ! axes range
-        write( unit = this%file_unit, fmt= '(a)') ' '
-        write( unit = this%file_unit, fmt= '(a)') '# axes setting'
+        write ( this%file_unit, '(" ")')
+        write ( this%file_unit, '("# axes setting")')
         if (this%hasxrange) then
-            write ( this%file_unit, '(a,f0.0,a,f0.0,a)' ) 'set xrange [',this%xrange(1),':',this%xrange(2),']'
+            write ( this%file_unit, '("set xrange [",G0,":",G0,"]")' ) this%xrange
         end if
         if (this%hasyrange) then
-            write ( this%file_unit, '(a,f0.0,a,f0.0,a)' ) 'set yrange [',this%yrange(1),':',this%yrange(2),']'
+            write ( this%file_unit, '("set yrange [",G0,":",G0,"]")' ) this%yrange
         end if
         if (this%haszrange) then
-            write ( this%file_unit, '(a,f0.0,a,f0.0,a)' ) 'set zrange [',this%zrange(1),':',this%zrange(2),']'
+            write ( this%file_unit, '("set zrange [",G0,":",G0,"]")' ) this%zrange
         end if
 
         ! secondary axes range
         if (this%hasx2range) then
-            write ( this%file_unit, '(a,f0.0,a,f0.0,a)' ) 'set x2range [',this%x2range(1),':',this%x2range(2),']'
+            write ( this%file_unit, '("set x2range [",G0,":",G0,"]")' ) this%x2range
         end if
         if (this%hasy2range) then
-            write ( this%file_unit, '(a,f0.0,a,f0.0,a)' ) 'set y2range [',this%y2range(1),':',this%y2range(2),']'
+            write ( this%file_unit, '("set y2range [",G0,":",G0,"]")' ) this%y2range
         end if
         ! finish by new line
-        write ( this%file_unit, '(a)' )  ! emptyline
+        write ( this%file_unit, '(a)' ) ! emptyline
 
     end subroutine processcmd
 
