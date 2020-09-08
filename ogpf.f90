@@ -352,12 +352,13 @@ contains
         class(gpf):: this
         character(len=*), intent(in) :: stropt
 
+        if(.not.allocated(this%txtoptions))this%txtoptions=''
         if (len_trim(this%txtoptions) == 0 ) then
             this%txtoptions = '' ! initialize string
         end if
         if ( len_trim(stropt)>0 ) then
             this%txtoptions = this%txtoptions // splitstr(stropt)
-        end if
+          end if
 
         this%hasoptions=.true.
 
@@ -550,6 +551,10 @@ contains
 
         if (present(font_name)) then
             label%lblfontname = font_name
+        else
+            if(.not.allocated(label%lblfontname))then
+                label%lblfontname = ''
+            endif
         end if
 
         if (present(font_size)) then
@@ -1598,6 +1603,7 @@ contains
         class(gpf)                   :: this
         character(len=*), intent(in) :: strcmd
 
+        if (.not.allocated(this%txtscript)) this%txtscript=''
         if (len_trim(this%txtscript) == 0 ) then
             this%txtscript = '' ! initialize string
         end if
@@ -2320,7 +2326,7 @@ contains
         ! num2str_int: converts integer number to string
         !..............................................................................
 
-        integer(kind=4), intent(in)     :: number_in
+        integer(kind=kind(1)), intent(in)     :: number_in
         character(len=:), allocatable   :: num2str_i4
 
         ! local variable
@@ -2336,7 +2342,7 @@ contains
         ! strfmt is the optional format string
         !..............................................................................
 
-        real(kind=4), intent(in)                :: number_in
+        real(kind=sp), intent(in)                :: number_in
         character(len=*), intent(in), optional  :: strfmt
         character(len=:), allocatable           :: num2str_r4
 
@@ -2361,7 +2367,7 @@ contains
         ! strfmt is the optional format string
         !..............................................................................
 
-        real(kind=8), intent(in)                :: number_in
+        real(kind=dp), intent(in)                :: number_in
         character(len=*), intent(in), optional  :: strfmt
         character(len=:), allocatable           :: num2str_r8
 
