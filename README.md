@@ -1,6 +1,30 @@
 # ogpf
 Object Based Interface to GnuPlot from Fortran (ogpf)
 
+## Usage
+
+__Prerequisite:__ [gnuplot](http://www.gnuplot.info/) must be installed on your system.
+
+### Fortran Package Manager (fpm)
+
+To use ogpf with your [fpm](https://github.com/fortran-lang/fpm) project, add the following to your package manifest file (`fpm.toml`):
+
+```toml
+[dependencies]
+ogpf = { git = "https://github.com/kookma/ogpf.git" }
+```
+
+You can then `use` the package as normal in your Fortran program with `use ogpf`.
+
+To run the example program in this package with fpm:
+
+```sh
+$ git clone https://github.com/kookma/ogpf.git
+$ cd ogpf
+$ fpm build
+$ fpm run --example
+```
+
 ## 2D Plots
 
 Simple plot                    | Animation
