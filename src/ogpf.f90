@@ -2375,7 +2375,7 @@ contains
         strtmp=trim (adjustl(strin) )
 
         ! 2. count the number substrings separated by delimiter
-        n = count( [ (strtmp(i:i), i=1, len_trim(strtmp)) ] == delimiter_)
+        n = count( [ (strtmp(i:i)== delimiter_, i=1, len_trim(strtmp)) ] )
 
         ! 3. allocate the output string array
         allocate(strarray(n+1))
