@@ -2248,34 +2248,34 @@ contains
         this%hasfileopen = .false.        ! reset file open flag
         this%hasanimation = .false.
         ! Use shell command to run gnuplot
-		if (get_os_type() == 1) then
-			call execute_command_line ('wgnuplot -persist ' // this%txtfilename)  !   Now plot the results
-		else
-			call execute_command_line ('gnuplot -persist ' // this%txtfilename)  !   Now plot the results
-		end if
-	contains
-		integer function get_os_type() result(r)
-			!! Returns one of OS_WINDOWS, others
-			!! At first, the environment variable `OS` is checked, which is usually
-			!! found on Windows. 
-			!! Copy from fpm/fpm_environment: https://github.com/fortran-lang/fpm/blob/master/src/fpm_environment.f90
-			character(len=32) :: val
-			integer :: length, rc
-			
-			integer, parameter :: OS_OTHERS = 0
-			integer, parameter :: OS_WINDOWS = 1
-			
-			r = OS_OTHERS
-			! Check environment variable `OS`.
-			call get_environment_variable('OS', val, length, rc)
-			
-			if (rc == 0 .and. length > 0 .and. index(val, 'Windows_NT') > 0) then
-				r = OS_WINDOWS
-				return
-			end if
-			
-		end function
-		
+        if (get_os_type() == 1) then
+            call execute_command_line ('wgnuplot -persist ' // this%txtfilename)  !   Now plot the results
+        else
+            call execute_command_line ('gnuplot -persist ' // this%txtfilename)  !   Now plot the results
+        end if
+    contains
+        integer function get_os_type() result(r)
+            !! Returns one of OS_WINDOWS, others
+            !! At first, the environment variable `OS` is checked, which is usually
+            !! found on Windows. 
+            !! Copy from fpm/fpm_environment: https://github.com/fortran-lang/fpm/blob/master/src/fpm_environment.f90
+            character(len=32) :: val
+            integer :: length, rc
+            
+            integer, parameter :: OS_OTHERS = 0
+            integer, parameter :: OS_WINDOWS = 1
+            
+            r = OS_OTHERS
+            ! Check environment variable `OS`.
+            call get_environment_variable('OS', val, length, rc)
+            
+            if (rc == 0 .and. length > 0 .and. index(val, 'Windows_NT') > 0) then
+                r = OS_WINDOWS
+                return
+            end if
+            
+        end function
+        
     end subroutine finalize_plot
 
 
