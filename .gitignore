@@ -33,4 +33,5 @@
 
 # fpm build directory
 build*
+bin*
 
