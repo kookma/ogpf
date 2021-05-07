@@ -59,5 +59,4 @@ demo.o: \
 	ogpf.o
 
 ogpf.o: \
-    ogpf.f90
-
+	ogpf.f90
