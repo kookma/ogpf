@@ -6,13 +6,13 @@ SRCS_f90d1 = \
 ogpf.f90
 
 SRCS_f90d2 = \
-demo.f90 
+demo.f90
 
 OBJS_f90d1 = \
-ogpf.o \
+ogpf.o
 
 OBJS_f90d2 = \
-demo.o 
+demo.o
 
 SRC_DIR_f90d1 = \
 ./src/
@@ -55,9 +55,9 @@ clean :
 
 # Dependencies of files	
 demo.o: \
-    demo.f90 \
-    ogpf.o
-	
+	demo.f90 \
+	ogpf.o
+
 ogpf.o: \
     ogpf.f90
 
