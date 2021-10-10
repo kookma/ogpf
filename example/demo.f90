@@ -518,7 +518,7 @@ contains
         x=linspace(-pi, pi,n)
         y = 0.0_wp
         z = 0.0_wp
-        call gp%animation_start(1) ! start animation, set delay is one second between frames
+        call gp%animation_start(1.) ! start animation, set delay is one second between frames
         call gp%axis([-pi, pi, -1.2_wp, 1.2_wp])
         call gp%title('A beautiful animation using ogpf library', textcolor='#aa5500')
         ! add frames
@@ -905,7 +905,7 @@ contains
         call gp%axis([0.0_wp, 4.0_wp*pi, -1.0_wp, 1.0_wp])
 
         ! start animation
-        call gp%animation_start(pause_seconds=1) ! one second delay between frames
+        call gp%animation_start(pause_seconds=1.) ! one second delay between frames
         do i=1,n ! add frames
             ! each plot command adds one frame
             call gp%plot(x(1:i), y(1:i), ls1='with impulses lw 2', &
@@ -935,7 +935,7 @@ contains
 
         call gp%axis([0.0_wp, 4.0*pi, -0.8_wp, 1.0_wp])
 
-        call gp%animation_start(1)
+        call gp%animation_start(1.)
         do i=1, n, 2
             ! making plot: add frames
             call gp%plot(x(1:i),y(1:i, :), 'with lines lw 2')
@@ -1392,7 +1392,7 @@ contains
         call gp%options('set ticslevel 0')
         call gp%axis([0.0_wp, 2.0*pi, 0.0_wp, 2.0*pi, -2.0_wp, 2.0_wp])
 
-        call gp%animation_start(1)
+        call gp%animation_start(1.)
         t=0.050_wp
         do
             ! add frames
