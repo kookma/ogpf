@@ -230,7 +230,7 @@ module ogpf
         integer :: multiplot_total_plots
 
         ! animation
-        integer  :: pause_seconds = 0  ! keep plot on screen for this value in seconds
+        real                            :: pause_seconds = 0  ! keep plot on screen for this value in seconds
         integer                         :: frame_number   ! frame number in animation
 
         ! use for debugging and error handling
@@ -608,7 +608,7 @@ contains
         this%hasy2range            = .false.
         this%haszrange             = .false.
 
-        this%pause_seconds         = 0
+        this%pause_seconds         = 0.0
         this%status                = 0
         this%hasanimation          = .false.
         this%hasfileopen           = .false.
@@ -825,7 +825,7 @@ contains
         if (.not. (this%hasanimation)) then
             call finalize_plot(this)
         else
-            write(this%file_unit, '(a, I2)') 'pause ', this%pause_seconds
+            write(this%file_unit, '(a, F5.2)') 'pause ', this%pause_seconds
         end if
 
 
@@ -938,7 +938,7 @@ contains
         if (.not. (this%hasanimation)) then
             call finalize_plot(this)
         else
-            write(this%file_unit, '(a, I2)') 'pause ', this%pause_seconds
+            write(this%file_unit, '(a, F5.2)') 'pause ', this%pause_seconds
         end if
 
         !Release memory
@@ -1063,7 +1063,7 @@ contains
         if (.not. (this%hasanimation)) then
             call finalize_plot(this)
         else
-            write(this%file_unit, '(a, I2)') 'pause ', this%pause_seconds
+            write(this%file_unit, '(a, F5.2)') 'pause ', this%pause_seconds
         end if
 
         !Release memory
@@ -1168,7 +1168,7 @@ contains
         if (.not. (this%hasanimation)) then
             call finalize_plot(this)
         else
-            write(this%file_unit, '(a, I2)') 'pause ', this%pause_seconds
+            write(this%file_unit, '(a, F5.2)') 'pause ', this%pause_seconds
         end if
 
         !: End of splot
@@ -1280,7 +1280,7 @@ contains
         if (.not. (this%hasanimation)) then
             call finalize_plot(this)
         else
-            write(this%file_unit, '(a, I2)') 'pause ', this%pause_seconds
+            write(this%file_unit, '(a, F5.2)') 'pause ', this%pause_seconds
         end if
 
         !: End of cplot
@@ -1375,7 +1375,7 @@ contains
          if (.not. (this%hasanimation)) then
              call finalize_plot(this)
          else
-             write(this%file_unit, '(a, I2)') 'pause ', this%pause_seconds
+             write(this%file_unit, '(a, F5.2)') 'pause ', this%pause_seconds
          end if
  
          !: End of lplot3d
@@ -1639,8 +1639,8 @@ contains
         ! sub_animation_start: set the setting to start an animation
         ! it simply set flags and open a script file to write data
         !-------------------------------------------------------------------------------
-        class(gpf)                    :: this
-        integer, intent(in), optional :: pause_seconds
+        class(gpf)                  :: this
+        real, intent(in), optional  :: pause_seconds
 
 
         ! ogpf does not support multiplot with animation at the same time
