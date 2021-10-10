@@ -825,7 +825,7 @@ contains
         if (.not. (this%hasanimation)) then
             call finalize_plot(this)
         else
-            write(this%file_unit, '(a, F11.2)') 'pause ', this%pause_seconds
+            write(this%file_unit, '(a, F5.2)') 'pause ', this%pause_seconds
         end if
 
 
@@ -938,7 +938,7 @@ contains
         if (.not. (this%hasanimation)) then
             call finalize_plot(this)
         else
-            write(this%file_unit, '(a, F11.2)') 'pause ', this%pause_seconds
+            write(this%file_unit, '(a, F5.2)') 'pause ', this%pause_seconds
         end if
 
         !Release memory
@@ -1063,7 +1063,7 @@ contains
         if (.not. (this%hasanimation)) then
             call finalize_plot(this)
         else
-            write(this%file_unit, '(a, F11.2)') 'pause ', this%pause_seconds
+            write(this%file_unit, '(a, F5.2)') 'pause ', this%pause_seconds
         end if
 
         !Release memory
@@ -1168,7 +1168,7 @@ contains
         if (.not. (this%hasanimation)) then
             call finalize_plot(this)
         else
-            write(this%file_unit, '(a, F11.2)') 'pause ', this%pause_seconds
+            write(this%file_unit, '(a, F5.2)') 'pause ', this%pause_seconds
         end if
 
         !: End of splot
@@ -1280,7 +1280,7 @@ contains
         if (.not. (this%hasanimation)) then
             call finalize_plot(this)
         else
-            write(this%file_unit, '(a, F11.2)') 'pause ', this%pause_seconds
+            write(this%file_unit, '(a, F5.2)') 'pause ', this%pause_seconds
         end if
 
         !: End of cplot
@@ -1375,7 +1375,7 @@ contains
          if (.not. (this%hasanimation)) then
              call finalize_plot(this)
          else
-             write(this%file_unit, '(a, F11.2)') 'pause ', this%pause_seconds
+             write(this%file_unit, '(a, F5.2)') 'pause ', this%pause_seconds
          end if
  
          !: End of lplot3d
