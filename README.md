@@ -369,7 +369,7 @@ Animation with 2D plot
         x=linspace(-pi, pi,n)
         y = 0.0_wp
         z = 0.0_wp
-        call gp%animation_start(1) ! start animation, set delay is one second between frames
+        call gp%animation_start(1.0) ! start animation, set delay is one second between frames
         call gp%axis([-pi, pi, -1.2_wp, 1.2_wp])
         call gp%options('set grid')
         ! add frames
@@ -728,7 +728,7 @@ Animation with stem plot
         call gp%axis([0.0_wp, 4.0_wp*pi, -1.0_wp, 1.0_wp])
 
         ! start animation
-        call gp%animation_start(delay=1) ! one second delay between frames
+        call gp%animation_start(delay=1.) ! one second delay between frames
         do i=1,n ! add frames
             ! each plot command adds one frame
             call gp%plot(x(1:i), y(1:i), 'with impulses lw 2', &
@@ -1032,7 +1032,7 @@ Animation with 3D plots
         call gp%options('set ticslevel 0')
         call gp%axis([0.0_wp, 2.0*pi, 0.0_wp, 2.0*pi, -2.0_wp, 2.0_wp])
 
-        call gp%animation_start(1)
+        call gp%animation_start(1.0)
         t=0.050_wp
         do
             ! add frames
