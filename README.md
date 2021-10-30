@@ -25,6 +25,37 @@ $ fpm build
 $ fpm run --example
 ```
 
+### Meson Builder
+
+The alternative is through the use of the [Meson builder](https://mesonbuild.com/index.html), which is
+multiplatform and multi source language build system. You can just use the ogpf git repo as a
+subproject in your own meson project. If you're unfamiliar with it, just read this
+[begginer's guide](https://mesonbuild.com/SimpleStart.html).
+
+After learning the basics, you can create a folder called subprojects on the root of your project
+and create a file inside with the following content:
+
+```toml
+[wrap-git]
+url=https://github.com/kookma/ogpf
+revision=head
+```
+
+Then on the meson.build file you have to import the subproject and grab the library variable.
+This is a sample meson.build file:
+
+```python
+project('research','fortran')
+
+ogpf_proj = subproject('ogpf')
+ogpf_dep = ogpf_proj.get_variable('ogpf_dep')
+
+executable('research',
+    dependencies: ogpf_dep)
+```
+and all the compiler flags will be handled.
+
+
 ## 2D Plots
 
 Simple plot                    | Animation
@@ -93,7 +124,7 @@ Surface                        | Contour
 Nine different color palettes are available. See [Ann Schnider](https://github.com/aschn/gnuplot-colorbrewer) gnuplot color palettes and [Gnuplotting](https://github.com/Gnuplotting/gnuplot-palettes).
 These color palettes can be used with:
 
-> `surf(x,y,z,palette='plt-name')` 
+> `surf(x,y,z,palette='plt-name')`
 
 > `contour(x,y,z,palette='plt-name')`
 
@@ -107,7 +138,7 @@ These color palettes can be used with:
 * accent
 * jet
 
-## The ogpf library other features 
+## The ogpf library other features
 There are a plenety commands to customise the plots. This includes:
 
 * Plot annotation (e.g. title, xlabel, ylabel, and zlabel)
@@ -140,7 +171,7 @@ Use several options each uses separate command
 `call gp%options('set tics font ",8"') ! font size for tics`
 
 
-* **Sample 4** 
+* **Sample 4**
 
 Set several options at the same time using semicolon as delimiter
 
@@ -603,7 +634,7 @@ will produce
 
 ```fortran
      subroutine exmp18()
-  
+
         !Use gnuplot script
         !to send a special external script file to gnuplot
         !the file is an external file here is called "simple.plt"
@@ -968,7 +999,7 @@ Contour plot and surface plot with color palette
 ```fortran
 
     subroutine exmp105()
-        
+
         type(gpf):: gp
 
         real(wp), allocatable:: x(:,:)
@@ -1097,7 +1128,7 @@ Multiplot layout for 3D plots
         call gp%multiplot(2,1)
         call gp%options('set colorbox')
         call gp%options('set tics')
-        call gp%options('set tics font ",8"') ! font size for tics		
+        call gp%options('set tics font ",8"') ! font size for tics
         call gp%contour(x,y,z1, palette='jet')
         call gp%contour(x,y,z2, palette='set1')
 
