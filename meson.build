@@ -1,5 +1,8 @@
 project('Ogpf', 'fortran')
 
+gnuplot = find_program('gnuplot',
+  required: true)
+
 libogpf = library('ogpf', 'src/ogpf.f90',
   fortran_args: '-std=f2008')
 
