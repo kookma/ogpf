@@ -35,7 +35,7 @@ subproject in your own meson project. If you're unfamiliar with it, just read th
 After learning the basics, you can create a folder called subprojects on the root of your project
 and create a file inside with the following content:
 
-```toml
+```
 [wrap-git]
 url=https://github.com/kookma/ogpf
 revision=head
