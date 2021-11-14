@@ -1,59 +1,78 @@
 # ogpf
 Object Based Interface to GnuPlot from Fortran (ogpf)
 
-## Usage
+## Installation
 
 __Prerequisite:__ [gnuplot](http://www.gnuplot.info/) must be installed on your system.
 
-### Fortran Package Manager (fpm)
 
-To use ogpf with your [fpm](https://github.com/fortran-lang/fpm) project, add the following to your package manifest file (`fpm.toml`):
+### Zero Installation Library
+The ogpf is a **zero installation library**! Just copy and paste the `ogpf.f90` in your project folder or in your library folder and use it! No any further step is required. However if you like to add ogpf to your projects through package managers, builders, installers see below options!
 
-```toml
-[dependencies]
-ogpf = { git = "https://github.com/kookma/ogpf.git" }
-```
+###
 
-You can then `use` the package as normal in your Fortran program with `use ogpf`.
+<details>
+	<summary><b>Fortran Package Manager (fpm)</b></summary>
+	
+>To use ogpf with your [fpm](https://github.com/fortran-lang/fpm) project, add the following to your package manifest file (`fpm.toml`):
+>
+>```toml
+>[dependencies]
+>ogpf = { git = "https://github.com/kookma/ogpf.git" }
+>```
+>
+>You can then `use` the package as normal in your Fortran program with `use ogpf`.
+>
+>To run the example program in this package with fpm:
+>
+>```sh
+>$ git clone https://github.com/kookma/ogpf.git
+>$ cd ogpf
+>$ fpm build
+>$ fpm run --example
+>```
 
-To run the example program in this package with fpm:
+		
+</details>	
 
-```sh
-$ git clone https://github.com/kookma/ogpf.git
-$ cd ogpf
-$ fpm build
-$ fpm run --example
-```
+###
 
-### Meson Builder
+<details>
+	<summary><b>Meson Builder</b></summary>
 
-The alternative is through the use of the [Meson builder](https://mesonbuild.com/index.html), which is
-multiplatform and multi source language build system. You can just use the ogpf git repo as a
-subproject in your own meson project. If you're unfamiliar with it, just read this
-[begginer's guide](https://mesonbuild.com/SimpleStart.html).
 
-After learning the basics, you can create a folder called subprojects on the root of your project
-and create a file inside with the following content:
+>The alternative is through the use of the [Meson builder](https://mesonbuild.com/index.html), which is
+>multiplatform and multi source language build system. You can just use the ogpf git repo as a
+>subproject in your own meson project. If you're unfamiliar with it, just read this
+>[begginer's guide](https://mesonbuild.com/SimpleStart.html).
+>
+>After learning the basics, you can create a folder called subprojects on the root of your project
+>and create a file inside with the following content:
+>
+>```
+>[wrap-git]
+>url=https://github.com/kookma/ogpf
+>revision=head
+>```
+>
+>Then on the meson.build file you have to import the subproject and grab the library variable.
+>This is a sample meson.build file:
+>
+>```python
+>project('research','fortran')
+>
+>ogpf_proj = subproject('ogpf')
+>ogpf_dep = ogpf_proj.get_variable('ogpf_dep')
+>
+>executable('research',
+>    dependencies: ogpf_dep)
+>```
+>and all the compiler flags will be handled.
 
-```
-[wrap-git]
-url=https://github.com/kookma/ogpf
-revision=head
-```
+</details>
 
-Then on the meson.build file you have to import the subproject and grab the library variable.
-This is a sample meson.build file:
-
-```python
-project('research','fortran')
-
-ogpf_proj = subproject('ogpf')
-ogpf_dep = ogpf_proj.get_variable('ogpf_dep')
-
-executable('research',
-    dependencies: ogpf_dep)
-```
-and all the compiler flags will be handled.
+# Usage
+Make sure you have a working version of [gnuplot](http://www.gnuplot.info/) must be installed on your system. Start with provideed examples.
 
 
 ## 2D Plots
