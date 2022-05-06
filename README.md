@@ -158,10 +158,21 @@ These color palettes can be used with:
 * jet
 
 ## The ogpf library other features
-There are a plenety commands to customise the plots. This includes:
+There are plenty of commands to customise the plots. This includes:
 
 * Plot annotation (e.g. title, xlabel, ylabel, and zlabel)
 * Axes setting (e.g. xrange, yrange, zrange, and grid)
+
+```fortran
+call gp%axis([-1.0,+1.0])                     ! Sets xrange
+call gp%axis([-1.0,+1.0,-2.0,+2.0])           ! Sets both xrange and yrange
+call gp%axis([-1.0,+1.0,-2.0,+2.0,-3.0,+3.0]) ! Sets all axis at same time
+
+call gp%xlim([-1.0,+1.0]) ! Sets only the xrange
+call gp%ylim([-2.0,+3.0]) ! Sets only the yrange
+call gp%zlim([-3.0,+3.0]) ! Sets only the zrange
+```
+
 * Line and marker color and style
 * Gnuplot options (e.g. fonts, tics format, frame format,... )
 

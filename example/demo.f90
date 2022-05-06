@@ -139,10 +139,11 @@ program demo
         print*, "Example 106: Multiplot layout in 3D"
         print*, "Example 107: Multiplot layout for 3D data"
         print*, "Example 108: Plot a 2D grid"
+        print*, "Example 109: Plot a 2D grid with random data, but use zlim to select a zrange"
 
         print*
         write (unit=*, fmt='(a)') "2D plots: select an example: 1 through 30"
-        write (unit=*, fmt='(a)') "3D plots: select an example: 101 through 108"
+        write (unit=*, fmt='(a)') "3D plots: select an example: 101 through 109"
         write (unit=*, fmt='(a)', advance='no') "enter 0 for exit:  "
         read*, i
 
@@ -226,6 +227,8 @@ program demo
                 call exmp107
            case(108)
                 call exmp108
+           case(109)
+                call exmp109
 
 
             case (0)
@@ -1477,6 +1480,41 @@ contains
     call gp%surf(x,y,z,lspec='w lp ps 2 pt 6 lc "#99aa33')
 
     end subroutine exmp108
+
+
+    !...............................................................................
+    !Example 109: Plot a 2D grid with random data, but use zlim to select a zrange
+    !...............................................................................
+    subroutine exmp109()
+        type(gpf):: gp
+        integer, parameter:: n=100
+
+        real(wp),    allocatable:: x(:,:)
+        real(wp),    allocatable:: y(:,:)
+        real(wp),    allocatable:: z(:,:)
+
+        ! create the xyz data
+        call meshgrid(x,y,linspace(-1.5_wp,1.5_wp,n))
+        allocate(z(n,n))
+        ! fills with random numbers
+        call random_number(z)
+        ! make them between -1.0_wp and 1.0_wp
+        z = z - 2.0_wp*z
+        ! create regions outsize such range
+        z = merge(-2.0_wp, z, x >= -.2_wp .and. x <= .2_wp)
+        z = merge(-2.0_wp, z, y >= -.2_wp .and. y <= .2_wp)
+
+        !plot the contour
+        call gp%title('Example 109: Zlim Example')
+        call gp%options('unset border') ! turn off border line (axes)
+        call gp%options('set view map')
+        ! Anything outside -1.0_wp and 1.0_wp will be cut off
+        call gp%zlim([-1.0_wp,1.0_wp])
+        call gp%options('set cbrange[-1.0:1.0]')
+        call gp%surf(x,y,z,palette='set1')
+
+    end subroutine exmp109
+
 
 
 end program demo

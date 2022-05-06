@@ -278,6 +278,9 @@ module ogpf
         procedure, pass, public :: zlabel       => set_zlabel
         procedure, pass, public :: axis         => set_axis
         procedure, pass, public :: axis_sc      => set_secondary_axis
+        procedure, pass, public :: xlim         => set_xlim
+        procedure, pass, public :: ylim         => set_ylim
+        procedure, pass, public :: zlim         => set_zlim
         procedure, pass, public :: filename     => set_filename
         procedure, pass, public :: reset        => reset_to_defaults
         procedure, pass, public :: preset       => use_preset_configuration
@@ -366,6 +369,43 @@ contains
     end subroutine set_options
 
 
+    subroutine set_xlim(this,rng)
+        !..............................................................................
+        !Set the x axis limits in form of [xmin, xmax]
+        !..............................................................................
+
+        class(gpf):: this
+        real(wp), intent(in) :: rng(2)
+        this%hasxrange=.true.
+        this%xrange=rng
+
+    end subroutine
+
+
+    subroutine set_ylim(this,rng)
+        !..............................................................................
+        !Set the y axis limits in form of [ymin, ymax]
+        !..............................................................................
+
+        class(gpf):: this
+        real(wp), intent(in) :: rng(2)
+        this%hasyrange=.true.
+        this%yrange=rng
+
+    end subroutine
+    
+    
+    subroutine set_zlim(this,rng)
+        !..............................................................................
+        !Set the z axis limits in form of [zmin, zmax]
+        !..............................................................................
+
+        class(gpf):: this
+        real(wp), intent(in) :: rng(2)
+        this%haszrange=.true.
+        this%zrange=rng
+
+    end subroutine
 
 
     subroutine set_axis(this,rng)
