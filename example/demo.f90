@@ -1209,7 +1209,7 @@ contains
         ! create 3D data
         m=55 ! number of grid points in y direction
         n=25 ! number of grid points in x direction
-        xgrid=linspace(-10.0_wp, 10.0_wp, m)
+        allocate(xgrid,source=linspace(-10.0_wp, 10.0_wp, m))
         ygrid=linspace(0.0_wp, 5.0_wp, n)
         allocate( z(m,n) )
 
@@ -1250,7 +1250,7 @@ contains
         allocate( z(m,n) )
 
         !z= sin(x) * cos (y)
-        where (x**2 + y**2 == 0.0_wp)
+        where ((.not. x**2 + y**2 > 0.0_wp) .and. (.not. x**2 + y**2 < 0.0_wp))
             z=1.0_wp
         elsewhere
             z=sin(x**2+y**2)/(x**2+y**2)
@@ -1347,7 +1347,6 @@ contains
         real(wp), allocatable:: z(:,:)
         integer:: m
         integer:: n
-        real(wp), parameter :: pi=4.0_wp*atan(1.0_wp)
 
         ! create the xyz data
         call meshgrid(x, y, linspace(-2.0_wp,2.0_wp, 65), linspace(-2.0_wp,3.0_wp, 65)  )
@@ -1387,7 +1386,7 @@ contains
         xv = linspace(0.0_wp, 2.0_wp*pi, m)
         yv = linspace(0.0_wp, 2.0_wp*pi, n)
         call meshgrid(x, y, xv, yv)
-        z = sin(x) + cos(y)
+        allocate(z, source = sin(x) + cos(y))
 
         call gp%title('Example 106. Animation of surface plot')
         call gp%axis([0.0_wp, 2.0*pi, 0.0_wp, 2.0*pi])

@@ -1,6 +1,6 @@
 name="ogpf"
 description = "Object Based Interface to GnuPlot from Fortran"
-version = "0.2.0"
+version = "0.4.0"
 license = "MIT"
 author = "Mohammad Rahmani"
 copyright = "2020 Mohammad Rahmani"
