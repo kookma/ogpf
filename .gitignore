@@ -35,3 +35,12 @@
 build*
 bin*
 
+/.vs
+/ifx/ifx_ogpf_vs22.fdz
+/ifx/ifx_ogpf_vs22.u2d
+
+ifx/.vs/
+
+ifx/x64/
+*.u2d
+*.fdz
