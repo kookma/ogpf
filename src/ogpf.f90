@@ -393,8 +393,8 @@ contains
         this%yrange=rng
 
     end subroutine
-    
-    
+
+
     subroutine set_zlim(this,rng)
         !..............................................................................
         !Set the z axis limits in form of [zmin, zmax]
@@ -1331,7 +1331,7 @@ contains
          ! lplot3d create a line plot in 3d
          ! datablock is used instead of  gnuplot inline file "-"
          !..............................................................................
- 
+
          class(gpf):: this
          ! Input vector
          real(wp),  intent(in)            :: x(:)
@@ -1339,17 +1339,15 @@ contains
          real(wp),  intent(in), optional  :: z(:)
          character(len=*),  intent(in), optional   ::  lspec
          character(len=*),  intent(in), optional   ::  palette
- 
+
          !   Local variables
          !----------------------------------------------------------------------
-         integer:: ncx
          integer:: nrx
          integer:: i
-         integer:: j
          logical:: xyz_data
          character(len=80)::  pltstring
          character(len=*), parameter ::  datablock = '$xyz'
- 
+
          pltstring=''
          !   Check the input data
          nrx=size(x)
@@ -1361,15 +1359,15 @@ contains
          else
              xyz_data=.false.
          end if
- 
+
          ! set default line style for 3D plot, can be overwritten
          this%txtdatastyle = 'lines'
          ! create the script file for writing gnuplot commands and data
          call create_outputfile(this)
- 
+
          ! Write titles and other annotations
          call processcmd(this)
- 
+
          ! Write xy data into file
          write ( this%file_unit, '(a)' ) '#data x y z'
          ! Rev 0.20
@@ -1388,15 +1386,15 @@ contains
              write( this%file_unit, '(a)' )  !put an empty line
              write ( this%file_unit, '(a)' ) 'EOD'  !end of datablock
          end if
- 
- 
+
+
          !write the color palette into gnuplot script file
          if (present(palette)) then
              write ( this%file_unit, '(a)' )  color_palettes(palette)
              write ( this%file_unit, '(a)' )  'set pm3d' ! a conflict with lspec
          end if
- 
- 
+
+
          if ( present(lspec) ) then
              if (hastitle(lspec)) then
                  pltstring='splot ' // datablock // ' ' // trim(lspec) // 'with lines'
@@ -1406,10 +1404,10 @@ contains
          else
              pltstring='splot ' // datablock // ' notitle with lines'
          end if
- 
+
          write ( this%file_unit, '(a)' ) trim(pltstring)
- 
- 
+
+
          !> Rev 0.2: animation
          ! if there is no animation finalize
          if (.not. (this%hasanimation)) then
@@ -1417,7 +1415,7 @@ contains
          else
              write(this%file_unit, '(a, F5.2)') 'pause ', this%pause_seconds
          end if
- 
+
          !: End of lplot3d
      end subroutine lplot3d
 
@@ -2297,25 +2295,25 @@ contains
         integer function get_os_type() result(r)
             !! Returns one of OS_WINDOWS, others
             !! At first, the environment variable `OS` is checked, which is usually
-            !! found on Windows. 
+            !! found on Windows.
             !! Copy from fpm/fpm_environment: https://github.com/fortran-lang/fpm/blob/master/src/fpm_environment.f90
             character(len=32) :: val
             integer :: length, rc
-            
+
             integer, parameter :: OS_OTHERS = 0
             integer, parameter :: OS_WINDOWS = 1
-            
+
             r = OS_OTHERS
             ! Check environment variable `OS`.
             call get_environment_variable('OS', val, length, rc)
-            
+
             if (rc == 0 .and. length > 0 .and. index(val, 'Windows_NT') > 0) then
                 r = OS_WINDOWS
                 return
             end if
-            
+
         end function
-        
+
     end subroutine finalize_plot
 
 
