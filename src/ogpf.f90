@@ -1397,9 +1397,9 @@ contains
 
          if ( present(lspec) ) then
              if (hastitle(lspec)) then
-                 pltstring='splot ' // datablock // ' ' // trim(lspec) // 'with lines'
+                 pltstring='splot ' // datablock // ' ' // trim(lspec) // ' with lines'
              else
-                 pltstring='splot ' // datablock // ' notitle '//trim(lspec) // 'with lines'
+                 pltstring='splot ' // datablock // ' notitle '// trim(lspec) // ' with lines'
              end if
          else
              pltstring='splot ' // datablock // ' notitle with lines'
